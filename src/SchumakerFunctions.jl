@@ -3,6 +3,7 @@ Imputes gradients based on a vector of x and y coordinates.
 ### Takes
  * x - A Float64 vector of x coordinates
  * y - A Float64 vector of y coordinates
+
 ### Returns
  * A Float64 vector of gradients for each input point
 """
@@ -23,10 +24,11 @@ function imputeGradients(x,y)
 
  """
  Creates a spline defined by interval starts IntStarts and quadratic coefficients SpCoefs which evaluates an input point.
- ### Takes
+### Takes
   * IntStarts - A Float64 vector that gives the starting points of intervals (in the x plane)
   * SpCoefs - A 3 column matrix with the same number of rows as the length of the IntStarts vector. The first column is the coefficient of the quadratic term, the second column for the linear term. The third column is the constant.
- ### Returns
+
+### Returns
   * A spline function that takes a single Float64 input and returns the spline value at that point.
  """
 function ppmak(IntStarts,SpCoefs)
@@ -46,10 +48,11 @@ end
 
  """
  Creates the derivative function of the spline defined by interval starts IntStarts and quadratic coefficients SpCoefs which evaluates an input point.
- ### Takes
+### Takes
   * IntStarts - A Float64 vector that gives the starting points of intervals (in the x plane)
   * SpCoefs - A 3 column matrix with the same number of rows as the length of the IntStarts vector. The first column is the coefficient of the quadratic term, the second column for the linear term. The third column is the constant.
- ### Returns
+
+### Returns
  * The derivative function that takes a single Float64 input and returns the derivative at that point.
  """
 function ppmakDeriv(IntStarts,SpCoefs)
@@ -71,6 +74,7 @@ Creates the second derivative function of the spline defined by interval starts 
 ### Takes
  * IntStarts - A Float64 vector that gives the starting points of intervals (in the x plane)
  * SpCoefs - A 3 column matrix with the same number of rows as the length of the IntStarts vector. The first column is the coefficient of the quadratic term, the second column for the linear term. The third column is the constant.
+
 ### Returns
  * The second derivative function that takes a single Float64 input and returns the second derivative at that point.
 """
@@ -94,6 +98,7 @@ Splits an interval into 2 subintervals and creates the quadratic coefficients
  * s - A 2 entry Float64 vector with gradients at either end of the interval
  * z - A 2 entry Float64 vector with y values at either end of the interval
  * Smallt - A 2 entry Float64 vector with x values at either end of the interval
+
 ### Returns
  * A 2 x 5 matrix. The first column is the x values of start of the two subintervals. The second column is the ends. The last 3 columns are quadratic coefficients in two subintervals.
 """
@@ -143,15 +148,16 @@ function schumakerIndInterval(s,z,Smallt)
 
  """
  Calls SchumakerIndInterval many times to get full set of spline intervals and coefficients. Then calls extrapolation for out of sample behaviour
- ### Takes
+### Takes
  * gradients - A Float64 vector of gradients at each point
  * x - A Float64 vector of x coordinates
  * y - A Float64 vector of y coordinates
  * extrapolation - A string in ("Curve", "Linear", "Constant") that gives behaviour outside of interpolation range.
- ### Returns
-  * A vector of interval starts
-  * A vector of interval ends
-  * A matrix of all coefficients
+
+### Returns
+ * A vector of interval starts
+ * A vector of interval ends
+ * A matrix of all coefficients
   """
  function getCoefficientMatrix(gradients,y,x, extrapolation)
    n = length(x)
@@ -167,16 +173,17 @@ function schumakerIndInterval(s,z,Smallt)
    return fullMatrix[:,1], fullMatrix[:,2], fullMatrix[:,3:5]
  end
 
- """
+"""
  Adds a row on top and bottom of coefficient matrix to give out of sample prediction.
- ### Takes
+### Takes
  * fullMatrix - output from GetCoefficientMatrix first few lines
  * extrapolation - A string in ("Curve", "Linear", "Constant") that gives behaviour outside of interpolation range.
  * x - A Float64 vector of x coordinates
  * y - A Float64 vector of y coordinates
- ### Returns
+
+### Returns
   * A new version of fullMatrix with out of sample prediction built into it.
-  """
+"""
 function extrapolate(fullMatrix, extrapolation, x, y)
 
   if (extrapolation == "Curve")
@@ -223,6 +230,7 @@ Creates splines for a given set of x and y values (and optionally gradients) and
 * y - A Float64 vector of y coordinates.
 * gradients (optional)- A Float64 vector of gradients at each point. If not supplied these are imputed from x and y.
 * extrapolation (optional) - This should be a string in ("Curve", "Linear", "Constant") specifying how to interpolate outside of the sample domain. By default it is "curve" which extends out the first and last quadratic curves. The other options are "Linear" which extends the line (from first and last curve) out from the first and last point and "Constant" which extends out the y value at the first and last point.
+
 ### Returns
 * A spline which takes and input value and returns the spline y value.
 * The derivative of this spline.

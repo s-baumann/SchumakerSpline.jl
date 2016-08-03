@@ -3,3 +3,7 @@ A Julia package to create a shape preserving spline. This is guaranteed to be mo
 of the spline and options for determining behaviour when evaluated outside the interpolation domain.
 
 This package has the same functionality as the R package called [schumaker](https://cran.r-project.org/web/packages/schumaker/index.html).
+
+# License
+
+Authored by Stuart Baumann and Margaryta Klymak this software is available to all under the standard MIT license. See LICENSE.md

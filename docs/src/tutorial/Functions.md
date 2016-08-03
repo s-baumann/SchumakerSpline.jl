@@ -1,3 +1,13 @@
+# schumaker Function
+
+The only exported function in this package (and the only one a basic user will ever need) is the schumaker function which creates a spline along with functions giving its derivative and second derivative. This is described as below
+
+## Function documentation
+
+```@docs
+SchumakerSpline.schumaker
+```
+
 # Internal functions
 
 This section includes documentation on internal functions that are not exported from the package. A normal user will not need to look here but an advanced user may want to use internal functions directly or optimise the code for their particular project.
