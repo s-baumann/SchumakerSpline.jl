@@ -37,6 +37,11 @@ Creates splines for a given set of x and y values (and optionally gradients) and
 # Internal functions
 
 
+<a id='Imputing-gradients-1'></a>
+
+## Imputing gradients
+
+
 This section includes documentation on internal functions that are not exported from the package. A normal user will not need to look here but an advanced user may want to use internal functions directly or optimise the code for their particular project.
 
 
@@ -57,6 +62,11 @@ Imputes gradients based on a vector of x and y coordinates.
 **Returns**
 
   * A Float64 vector of gradients for each input point
+
+
+<a id='Creating-polynomials-1'></a>
+
+## Creating polynomials
 
 
 These are used to create matrix that has the polynomial coefficients of the spline in each interval. Note that the extrapolate function is only used when linear or constant extrapolation is requested when outside the interpolation domain.
@@ -115,6 +125,11 @@ Adds a row on top and bottom of coefficient matrix to give out of sample predict
 **Returns**
 
   * A new version of fullMatrix with out of sample prediction built into it.
+
+
+<a id='Creating-splines-from-polynomials-1'></a>
+
+## Creating splines from polynomials
 
 
 Finally these functions create the spline function by executing the correct polynomial in each specific interval.
