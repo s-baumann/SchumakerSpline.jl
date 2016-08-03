@@ -25,7 +25,7 @@ We can first note that due to the shock process it is not possible to get analyt
 5. Check your convergence criteria. Are the new $V(B_t | \epsilon_t )$ values very close to the old values?
   * If they are we end the algorithm
   * If they are not we go back to point 3.
-  
+
 This strategy relies on the consumption problem being a contraction mapping. This means that if we use this algorithm we will converge to a fixed point function.
 
 ### Why a schumaker spline is necessary
