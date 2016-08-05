@@ -4,11 +4,10 @@
 # Installation
 
 
-At present this package is unregistered so please install with the command:
+This package is registered and can be installed by:
 
+`Pkg.add("SchumakerSpline")`
+
+If this doesn't work you can also try:
 
 `Pkg.clone("https://github.com/s-baumann/SchumakerSpline.jl.git")`
-
-
-For more information please consult the package manager documentation [here](http://docs.julialang.org/en/release-0.4/manual/packages/#installing-unregistered-packages).
-
