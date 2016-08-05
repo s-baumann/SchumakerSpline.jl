@@ -4,10 +4,8 @@
 # Installation
 
 
-This package is registered and can be installed by:
+This package is registered and can be installed by: `Pkg.add("SchumakerSpline")`
 
-`Pkg.add("SchumakerSpline")`
 
-If this doesn't work you can also try:
+If this doesn't work you can also try: `Pkg.clone("https://github.com/s-baumann/SchumakerSpline.jl.git")`
 
-`Pkg.clone("https://github.com/s-baumann/SchumakerSpline.jl.git")`
