@@ -8,7 +8,6 @@ os:
  
  - osx
 
- - windows
 julia:
  
  - release
