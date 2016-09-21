@@ -37,7 +37,7 @@ function ppmak(IntStarts,SpCoefs)
     IntervalNum = max(IntervalNum, 1)
     xmt = PointToExamine - IntStarts[IntervalNum]
     Coefs = SpCoefs[ IntervalNum , :]
-    return reshape(Coefs * [xmt^2 xmt 1]', 1)[1]
+    return reshape(Coefs' * [xmt^2 xmt 1]', 1)[1]
   end
   function Vsp(PointToExamine)
     return map(x -> sp(x), PointToExamine)
@@ -61,7 +61,7 @@ function ppmakDeriv(IntStarts,SpCoefs)
     IntervalNum = max(IntervalNum, 1)
     xmt = PointToExamine - IntStarts[IntervalNum]
     Coefs = SpCoefs[ IntervalNum , :]
-    return reshape(Coefs * [2*xmt 1 0]', 1)[1]
+    return reshape(Coefs' * [2*xmt 1 0]', 1)[1]
   end
   function Vsp(PointToExamine)
     return map(x -> sp(x), PointToExamine)
@@ -84,7 +84,7 @@ function ppmak2Deriv(IntStarts,SpCoefs)
     IntervalNum = max(IntervalNum, 1)
     xmt = PointToExamine - IntStarts[IntervalNum]
     Coefs = SpCoefs[ IntervalNum , :]
-    return reshape(Coefs * [2 0 0]', 1)[1]
+    return reshape(Coefs' * [2 0 0]', 1)[1]
   end
   function Vsp(PointToExamine)
     return map(x -> sp(x), PointToExamine)
