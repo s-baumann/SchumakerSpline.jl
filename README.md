@@ -9,4 +9,4 @@ of the spline and options for determining behaviour when evaluated outside the i
 
 This package has the same functionality as the R package called [schumaker](https://cran.r-project.org/web/packages/schumaker/index.html).
 
-Note that this package does not currently support Julia 0.5 but will be amended to support it after it becomes the stable version. Authored by Stuart Baumann and Margaryta Klymak this software is available to all under the standard MIT license. See LICENSE.md
+Note that this package currently supports Julia 0.5 but not earlier versions of Julia. Authored by Stuart Baumann and Margaryta Klymak this software is available to all under the standard MIT license. See LICENSE.md
