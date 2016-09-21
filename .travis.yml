@@ -11,6 +11,7 @@ os:
 julia:
  
  - release
+ - 0.5
  
 notifications:
 
