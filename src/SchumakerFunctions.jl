@@ -10,7 +10,7 @@ Imputes gradients based on a vector of x and y coordinates.
 function imputeGradients(x,y)
      n = length(x)
      # Judd (1998), page 233, second last equation
-     L = sqrt( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
+     L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
      # Judd (1998), page 233, last equation
      d = (y[2:n]-y[1:(n-1)])./(x[2:n]-x[1:(n-1)])
      # Judd (1998), page 234, Eqn 6.11.6
