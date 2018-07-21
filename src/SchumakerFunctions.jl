@@ -1,4 +1,126 @@
 """
+Creates a Schumaker spline.
+### Takes
+* x - A Float64 vector of x coordinates.
+* y - A Float64 vector of y coordinates.
+* gradients (optional)- A Float64 vector of gradients at each point. If not supplied these are imputed from x and y.
+* extrapolation (optional) - This should be a string in ("Curve", "Linear", "Constant") specifying how to interpolate outside of the sample domain. By default it is "curve" which extends out the first and last quadratic curves. The other options are "Linear" which extends the line (from first and last curve) out from the first and last point and "Constant" which extends out the y value at the first and last point.
+
+### Returns
+* A spline object
+ """
+struct Schumaker
+    IntStarts_::Array{Float64}
+    IntEnds_::Array{Float64}
+    coefficient_matrix_::Array{Float64}
+    function Schumaker(x::Array{Float64},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = "Curve")
+        if length(gradients) == 0
+           gradients = imputeGradients(x,y)
+        end
+        IntStarts, IntEnds, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
+        new(IntStarts, IntEnds, SpCoefs)
+     end
+    function Schumaker(x::Array{Int64},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+        x_as_floats = convert.(Float64, x)
+        return Schumaker(x_as_floats , y , gradients , extrapolation)
+    end
+    function Schumaker(x::Array{Date},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+        days_as_ints = Dates.days.(x)
+        return Schumaker(days_as_ints , y , gradients , extrapolation)
+    end
+end
+
+"""
+Evaluates the spline at a point. The point can be specified as a Float64, Int64 or Date.
+Derivatives can also be taken.
+### Takes
+ * spline - A Schumaker type spline
+ * PointToExamine - The point at which to evaluate the integral
+ * derivative - The derivative being sought. This should be 0 to just evaluate the spline, 1 for the first derivative or 2 for a second derivative.
+ Higher derivatives are all zero (because it is a quadratic spline). Negative values do not give integrals. Use evaluate_integral instead.
+### Returns
+ * A Float64 value of the spline or appropriate derivative.
+"""
+function evaluate(spline::Schumaker,PointToExamine::Float64,  derivative::Int64 = 0)
+    # Derivative of 0 means normal spline evaluation.
+    # Derivative of 1, 2 are first and second derivatives respectively.
+    IntervalNum = searchsortedlast(spline.IntStarts_, PointToExamine)
+    IntervalNum = max(IntervalNum, 1)
+    xmt = PointToExamine - spline.IntStarts_[IntervalNum]
+    Coefs = spline.coefficient_matrix_[ IntervalNum , :]
+    if derivative == 0
+        return reshape(Coefs' * [xmt^2 xmt 1]', 1)[1]
+    elseif derivative == 1
+        return reshape(Coefs' * [2*xmt 1 0]', 1)[1]
+    elseif derivative == 2
+        return reshape(Coefs' * [2 0 0]', 1)[1]
+    elseif derivative < 0
+        error("This function cannot do integrals. Use evaluate_integral instead")
+    else
+        return 0.0
+    end
+end
+function evaluate(spline::Schumaker,PointToExamine::Int64,  derivative::Int64 = 0)
+    point_as_float = convert.(Float64, PointToExamine)
+    return evaluate(spline,point_as_float,  derivative)
+end
+function evaluate(spline::Schumaker,PointToExamine::Date,  derivative::Int64 = 0)
+    days_as_int = Dates.days.(PointToExamine)
+    return evaluate(spline,days_as_int,  derivative)
+end
+
+"""
+Estimates the integral of the spline between lhs and rhs. These end points can be input
+as Float64s, Int64s or Dates.
+### Takes
+ * spline - A Schumaker type spline
+ * lhs - The left hand limit of the integral
+ * rhs - The right hand limit of the integral
+
+### Returns
+ * A Float64 value of the integral.
+"""
+function evaluate_integral(spline::Schumaker,lhs::Float64, rhs::Float64)
+    first_interval = searchsortedlast(spline.IntStarts_, lhs)
+    last_interval = searchsortedlast(spline.IntStarts_, rhs)
+    number_of_intervals = last_interval - first_interval
+    if number_of_intervals == 0
+        return section_integral(spline , lhs, rhs)
+    elseif number_of_intervals == 1
+        first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
+        last  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
+        return first + last
+    else
+        interior_areas = 0.0
+        first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
+        for i in 1:(number_of_intervals-1)
+            interior_areas = interior_areas + section_integral(spline ,  spline.IntStarts_[first_interval + i] , spline.IntStarts_[first_interval + i+1] )
+        end
+        last  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
+        return first + interior_areas + last
+    end
+end
+function evaluate_integral(spline::Schumaker,lhs::Int64, rhs::Int64)
+    lhs_as_Float = convert(Float64, lhs)
+    rhs_as_Float = convert(Float64, rhs)
+    return evaluate_integral(spline,lhs_as_Float, rhs_as_Float)
+end
+function evaluate_integral(spline::Schumaker,lhs::Date, rhs::Date)
+    lhs_as_int = Dates.days.(lhs)
+    rhs_as_int = Dates.days.(rhs)
+    return evaluate_integral(spline,lhs_as_int, rhs_as_int)
+end
+function section_integral(spline::Schumaker,lhs::Float64,  rhs::Float64)
+    # Note that the lhs is used to infer the interval.
+    IntervalNum = searchsortedlast(spline.IntStarts_, lhs)
+    IntervalNum = max(IntervalNum, 1)
+    Coefs = spline.coefficient_matrix_[ IntervalNum , :]
+    r_xmt = rhs - spline.IntStarts_[IntervalNum]
+    l_xmt = lhs - spline.IntStarts_[IntervalNum]
+    return reshape(Coefs' * [(1/3)*r_xmt^3 0.5*r_xmt^2 r_xmt]', 1)[1] - reshape(Coefs' * [(1/3)*l_xmt^3 0.5*l_xmt^2 l_xmt]', 1)[1]
+end
+
+"""
 Imputes gradients based on a vector of x and y coordinates.
 ### Takes
  * x - A Float64 vector of x coordinates
@@ -7,7 +129,7 @@ Imputes gradients based on a vector of x and y coordinates.
 ### Returns
  * A Float64 vector of gradients for each input point
 """
-function imputeGradients(x,y)
+function imputeGradients(x::Array{Float64},y::Array{Float64})
      n = length(x)
      # Judd (1998), page 233, second last equation
      L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
@@ -22,76 +144,6 @@ function imputeGradients(x,y)
      return ff
  end
 
- """
- Creates a spline defined by interval starts IntStarts and quadratic coefficients SpCoefs which evaluates an input point.
-### Takes
-  * IntStarts - A Float64 vector that gives the starting points of intervals (in the x plane)
-  * SpCoefs - A 3 column matrix with the same number of rows as the length of the IntStarts vector. The first column is the coefficient of the quadratic term, the second column for the linear term. The third column is the constant.
-
-### Returns
-  * A spline function that takes a single Float64 input and returns the spline value at that point.
- """
-function ppmak(IntStarts,SpCoefs)
-  function sp(PointToExamine)
-    IntervalNum = searchsortedlast(IntStarts, PointToExamine)
-    IntervalNum = max(IntervalNum, 1)
-    xmt = PointToExamine - IntStarts[IntervalNum]
-    Coefs = SpCoefs[ IntervalNum , :]
-    return reshape(Coefs' * [xmt^2 xmt 1]', 1)[1]
-  end
-  function Vsp(PointToExamine)
-    return map(x -> sp(x), PointToExamine)
-  end
-  return Vsp
-end
-
-
- """
- Creates the derivative function of the spline defined by interval starts IntStarts and quadratic coefficients SpCoefs which evaluates an input point.
-### Takes
-  * IntStarts - A Float64 vector that gives the starting points of intervals (in the x plane)
-  * SpCoefs - A 3 column matrix with the same number of rows as the length of the IntStarts vector. The first column is the coefficient of the quadratic term, the second column for the linear term. The third column is the constant.
-
-### Returns
- * The derivative function that takes a single Float64 input and returns the derivative at that point.
- """
-function ppmakDeriv(IntStarts,SpCoefs)
-  function sp(PointToExamine)
-    IntervalNum = searchsortedlast(IntStarts, PointToExamine)
-    IntervalNum = max(IntervalNum, 1)
-    xmt = PointToExamine - IntStarts[IntervalNum]
-    Coefs = SpCoefs[ IntervalNum , :]
-    return reshape(Coefs' * [2*xmt 1 0]', 1)[1]
-  end
-  function Vsp(PointToExamine)
-    return map(x -> sp(x), PointToExamine)
-  end
-  return Vsp
-end
-
-"""
-Creates the second derivative function of the spline defined by interval starts IntStarts and quadratic coefficients SpCoefs which evaluates an input point.
-### Takes
- * IntStarts - A Float64 vector that gives the starting points of intervals (in the x plane)
- * SpCoefs - A 3 column matrix with the same number of rows as the length of the IntStarts vector. The first column is the coefficient of the quadratic term, the second column for the linear term. The third column is the constant.
-
-### Returns
- * The second derivative function that takes a single Float64 input and returns the second derivative at that point.
-"""
-function ppmak2Deriv(IntStarts,SpCoefs)
-  function sp(PointToExamine)
-    IntervalNum = searchsortedlast(IntStarts, PointToExamine)
-    IntervalNum = max(IntervalNum, 1)
-    xmt = PointToExamine - IntStarts[IntervalNum]
-    Coefs = SpCoefs[ IntervalNum , :]
-    return reshape(Coefs' * [2 0 0]', 1)[1]
-  end
-  function Vsp(PointToExamine)
-    return map(x -> sp(x), PointToExamine)
-  end
-  return Vsp
-end
-
 """
 Splits an interval into 2 subintervals and creates the quadratic coefficients
 ### Takes
@@ -102,7 +154,7 @@ Splits an interval into 2 subintervals and creates the quadratic coefficients
 ### Returns
  * A 2 x 5 matrix. The first column is the x values of start of the two subintervals. The second column is the ends. The last 3 columns are quadratic coefficients in two subintervals.
 """
-function schumakerIndInterval(s,z,Smallt)
+function schumakerIndInterval(s::Array{Float64},z::Array{Float64},Smallt::Array{Float64})
    # The SchumakerIndInterval function takes in each interval individually
    # and returns the location of the knot as well as the quadratic coefficients in each subinterval.
 
@@ -159,7 +211,7 @@ function schumakerIndInterval(s,z,Smallt)
  * A vector of interval ends
  * A matrix of all coefficients
   """
- function getCoefficientMatrix(gradients,y,x, extrapolation)
+ function getCoefficientMatrix(x::Array{Float64},y::Array{Float64},gradients::Array{Float64}, extrapolation::String)
    n = length(x)
    fullMatrix = schumakerIndInterval([gradients[1] gradients[2]], [y[1] y[2]], [x[1] x[2]] )
     for intrval = 2:(n-1)
@@ -184,76 +236,32 @@ function schumakerIndInterval(s,z,Smallt)
 ### Returns
   * A new version of fullMatrix with out of sample prediction built into it.
 """
-function extrapolate(fullMatrix, extrapolation, x, y)
-
-  if (extrapolation == "Curve")
+function extrapolate(fullMatrix::Array{Float64,2}, extrapolation::String, x::Array{Float64}, y::Array{Float64})
+  if extrapolation == "Curve"
     return fullMatrix
   end
 
   dim = size(fullMatrix)[1]
-
   Botx   = fullMatrix[1,1]
   Boty   = y[1]
-
-  if (extrapolation == "Linear")
+  if extrapolation == "Linear"
     BotB = fullMatrix[1 , 4]
     BotC   = Boty - BotB
   else
     BotB = 0.0
     BotC = Boty
   end
-
   BotRow = [ Botx-1, Botx, 0.0, BotB, BotC]
-
   Topx = fullMatrix[dim,2]
   Topy = y[length(y)]
-
-  if (extrapolation == "Linear")
+  if extrapolation == "Linear"
     TopB = fullMatrix[dim ,4]
     TopC = Topy
   else
     TopB = 0.0
     TopC = Topy
   end
-
   TopRow = [ Topx, Topx + 1, 0.0 ,TopB ,TopC]
-
   fullMatrix = vcat(BotRow' , fullMatrix,  TopRow')
-
   return fullMatrix
-end
-
-"""
-Creates splines for a given set of x and y values (and optionally gradients) and the first and second derivatives of this spline.
-### Takes
-* x - A Float64 vector of x coordinates.
-* y - A Float64 vector of y coordinates.
-* gradients (optional)- A Float64 vector of gradients at each point. If not supplied these are imputed from x and y.
-* extrapolation (optional) - This should be a string in ("Curve", "Linear", "Constant") specifying how to interpolate outside of the sample domain. By default it is "curve" which extends out the first and last quadratic curves. The other options are "Linear" which extends the line (from first and last curve) out from the first and last point and "Constant" which extends out the y value at the first and last point.
-
-### Returns
-* A spline which takes and input value and returns the spline y value.
-* The derivative of this spline.
-* The second derivative of this spline.
- """
-function schumaker(x,y,gradients = "Not-Supplied", extrapolation = ("Curve", "Linear", "Constant"))
-  # This is the main function of the package that creates and returns a schumaker spline.
-  # Inputs : An x array, the corresponding y array and optionally the gradients at each point.
-  #           If gradients are not input then they are estimated.
-  # Outputs: A schumaker spline function. Its derivative and its second derivative.
-
-  if (extrapolation == ("Curve", "Linear", "Constant"))
-    extrapolation = "Curve"
-  end
-
-  if (gradients == "Not-Supplied")
-     gradients = imputeGradients(x,y)
-  end
-
-  IntStarts, IntEnds, SpCoefs = getCoefficientMatrix(gradients,y,x, extrapolation)
-
-  Sp      = ppmak(IntStarts,SpCoefs)
-  SpDeriv = ppmakDeriv(IntStarts,SpCoefs)
-  SpDeriv2= ppmak2Deriv(IntStarts,SpCoefs)
-  return Sp, SpDeriv, SpDeriv2
 end

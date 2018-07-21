@@ -1,6 +1,6 @@
 The SchumakerSpline.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2016: Stuart Baumann & Margaryta Klymak.
+> Copyright (c) 2018: Stuart Baumann & Margaryta Klymak.
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the

@@ -1,7 +1,9 @@
 module SchumakerSpline
 
+using Dates
+
 include("SchumakerFunctions.jl")
 
-export schumaker
+export Schumaker, evaluate, evaluate_integral
 
 end

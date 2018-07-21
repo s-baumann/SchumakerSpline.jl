@@ -3,58 +3,45 @@ y = log(x) + sqrt(x)
 gradients = "Not-Supplied"
 
 using SchumakerSpline
-
-
+using Gadfly
+using DataFrames
 ########################
 # Linear Extrapolation #
 extrapolation = "Linear"
-Spline, DerivSpline, SecondDerivSpline = schumaker(x,y, gradients, extrapolation)
+spline = Schumaker(x,y, [], extrapolation)
 
-#Pkg.add("PyPlot")
-using PyPlot
-#Pkg.update()
-xArray = linspace(-5, 10, 100)
-Spp = map(x -> DerivSpline(x), xArray)
-plt = plot(xArray, Spp, color="green", linewidth=2.0, linestyle="--")
-plt
-Spp = map(x -> Spline(x), xArray)
-plt = plot(x, y, color="blue", linewidth=2.0, linestyle="-")
-plt
-plt = plot(xArray, Spp, color="red", linewidth=2.0, linestyle="--")
-plt
-Spp = map(x -> DerivSpline(x), xArray)
-plt = plot(xArray, Spp, color="green", linewidth=2.0, linestyle="--")
-plt
-Spp = map(x -> SecondDerivSpline(x), xArray)
-plt = plot(xArray, Spp, color="Black", linewidth=2.0, linestyle="--")
-plt
+df = DataFrame()
+df[:x] =  linspace(-5, 10, 100)
+df[:values]  = evaluate.(spline, df[:x]  )
+plt1 = Gadfly.plot(df, x=:x, y=:values, Geom.line)
+df[:derivative_values]  = evaluate.(spline, df[:x] , 1 )
+plt2 = Gadfly.plot(df, x=:x, y=:derivative_values, Geom.line)
+df[:second_derivative_values]  = evaluate.(spline, df[:x] , 2 )
+plt3 = Gadfly.plot(df, x=:x, y=:second_derivative_values, Geom.line)
 
 
 ##########################
 # Constant Extrapolation #
 extrapolation = "Constant"
-Spline, DerivSpline, SecondDerivSpline = schumaker(x,y, gradients, extrapolation)
+spline = Schumaker(x,y, [], extrapolation)
 
-#Pkg.add("PyPlot")
-using PyPlot
-#Pkg.update()
-xArray = linspace(-5, 10, 100)
-Spp = map(x -> Spline(x), xArray)
-plt = plot(x, y, color="blue", linewidth=2.0, linestyle="-")
-plt
-plt = plot(xArray, Spp, color="red", linewidth=2.0, linestyle="--")
-plt
-
+df = DataFrame()
+df[:x] =  linspace(-5, 10, 100)
+df[:values]  = evaluate.(spline, df[:x]  )
+plt1 = Gadfly.plot(df, x=:x, y=:values, Geom.line)
+df[:derivative_values]  = evaluate.(spline, df[:x] , 1 )
+plt2 = Gadfly.plot(df, x=:x, y=:derivative_values, Geom.line)
+df[:second_derivative_values]  = evaluate.(spline, df[:x] , 2 )
+plt3 = Gadfly.plot(df, x=:x, y=:second_derivative_values, Geom.line)
 ##########################
 # Curve    Extrapolation #
-Spline, DerivSpline, SecondDerivSpline = schumaker(x,y, gradients)
+spline = Schumaker(x,y, [])
 
-#Pkg.add("PyPlot")
-using PyPlot
-#Pkg.update()
-xArray = linspace(-5, 10, 100)
-Spp = map(x -> Spline(x), xArray)
-plt = plot(x, y, color="blue", linewidth=2.0, linestyle="-")
-plt
-plt = plot(xArray, Spp, color="red", linewidth=2.0, linestyle="--")
-plt
+df = DataFrame()
+df[:x] =  linspace(-5, 10, 100)
+df[:values]  = evaluate.(spline, df[:x]  )
+plt1 = Gadfly.plot(df, x=:x, y=:values, Geom.line)
+df[:derivative_values]  = evaluate.(spline, df[:x] , 1 )
+plt2 = Gadfly.plot(df, x=:x, y=:derivative_values, Geom.line)
+df[:second_derivative_values]  = evaluate.(spline, df[:x] , 2 )
+plt3 = Gadfly.plot(df, x=:x, y=:second_derivative_values, Geom.line)
