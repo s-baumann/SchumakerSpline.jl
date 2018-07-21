@@ -2,7 +2,7 @@ using SchumakerSpline
 tol = 10*eps()
 
 x = [1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]
-y = log(x) + sqrt(x)
+y = log.(x) + sqrt.(x)
 
 spline = Schumaker(x,y)
 for i in 1:length(x)

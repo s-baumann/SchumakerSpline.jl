@@ -20,7 +20,7 @@ struct Schumaker
         IntStarts, IntEnds, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
         new(IntStarts, IntEnds, SpCoefs)
      end
-    function Schumaker(x::Array{Int64},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+    function Schumaker(x::Array{Int},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = ("Curve"))
         x_as_floats = convert.(Float64, x)
         return Schumaker(x_as_floats , y , gradients , extrapolation)
     end
@@ -31,7 +31,7 @@ struct Schumaker
 end
 
 """
-Evaluates the spline at a point. The point can be specified as a Float64, Int64 or Date.
+Evaluates the spline at a point. The point can be specified as a Float64, Int or Date.
 Derivatives can also be taken.
 ### Takes
  * spline - A Schumaker type spline
@@ -41,7 +41,7 @@ Derivatives can also be taken.
 ### Returns
  * A Float64 value of the spline or appropriate derivative.
 """
-function evaluate(spline::Schumaker,PointToExamine::Float64,  derivative::Int64 = 0)
+function evaluate(spline::Schumaker,PointToExamine::Float64,  derivative::Int = 0)
     # Derivative of 0 means normal spline evaluation.
     # Derivative of 1, 2 are first and second derivatives respectively.
     IntervalNum = searchsortedlast(spline.IntStarts_, PointToExamine)
@@ -60,18 +60,18 @@ function evaluate(spline::Schumaker,PointToExamine::Float64,  derivative::Int64 
         return 0.0
     end
 end
-function evaluate(spline::Schumaker,PointToExamine::Int64,  derivative::Int64 = 0)
+function evaluate(spline::Schumaker,PointToExamine::Int,  derivative::Int = 0)
     point_as_float = convert.(Float64, PointToExamine)
     return evaluate(spline,point_as_float,  derivative)
 end
-function evaluate(spline::Schumaker,PointToExamine::Date,  derivative::Int64 = 0)
+function evaluate(spline::Schumaker,PointToExamine::Date,  derivative::Int = 0)
     days_as_int = Dates.days.(PointToExamine)
     return evaluate(spline,days_as_int,  derivative)
 end
 
 """
 Estimates the integral of the spline between lhs and rhs. These end points can be input
-as Float64s, Int64s or Dates.
+as Float64s, Ints or Dates.
 ### Takes
  * spline - A Schumaker type spline
  * lhs - The left hand limit of the integral
@@ -100,7 +100,7 @@ function evaluate_integral(spline::Schumaker,lhs::Float64, rhs::Float64)
         return first + interior_areas + last
     end
 end
-function evaluate_integral(spline::Schumaker,lhs::Int64, rhs::Int64)
+function evaluate_integral(spline::Schumaker,lhs::Int, rhs::Int)
     lhs_as_Float = convert(Float64, lhs)
     rhs_as_Float = convert(Float64, rhs)
     return evaluate_integral(spline,lhs_as_Float, rhs_as_Float)

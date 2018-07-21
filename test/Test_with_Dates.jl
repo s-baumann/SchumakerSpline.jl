@@ -1,5 +1,5 @@
 using SchumakerSpline
-using Dates
+using Base.Dates
 tol = 10*eps()
 
 StartDate = Date(2018, 7, 21)
