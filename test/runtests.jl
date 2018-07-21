@@ -4,7 +4,7 @@ using Base.Test
 # Run tests
 
 tic()
-println("Test with Floats")
+println("Test with Float64s")
 @time @test include("Test_with_Floats.jl")
 toc()
 tic()

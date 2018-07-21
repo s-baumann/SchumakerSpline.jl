@@ -18,7 +18,7 @@ spline = Schumaker(x,y)
 for i in 1:length(x)
     abs(evaluate(spline, x[i]) - y[2]) < tol
 end
-# Evaluation with a float.
+# Evaluation with a Float64.
 evaluate(spline, 11.5)
 
 # Testing second derivatives
