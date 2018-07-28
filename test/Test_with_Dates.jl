@@ -69,9 +69,10 @@ abs(evaluate(spline,  Date(2019, 8, 21)) - y[2]) < tol
 x = Array{Date}(3)
 x[1] = Date(2018, 7, 21)
 x[2] = Date(2018, 8, 21)
-x[3] = Date(201, 9, 21)
+x[3] = Date(2018, 9, 21)
 y = Array{Float64}(3)
 y[1] = 0.0
 y[2] = 1.0
 y[3] = 1.3
 spline = Schumaker(x,y)
+abs(evaluate(spline,  x[2]) - y[2]) < tol
