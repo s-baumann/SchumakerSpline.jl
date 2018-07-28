@@ -37,3 +37,41 @@ rhs = StartDate + Dates.Month(16)
 numerical_integral = evaluate_integral(spline, lhs,rhs)
 analytical = analytic_integral(lhs,rhs)
 abs(  analytical - numerical_integral  ) < 1
+
+## Testing with only one date provided.
+x = Array{Date}(1)
+x[1] = Date(2018, 7, 21)
+y = Array{Float64}(1)
+y[1] = 0.0
+spline = Schumaker(x,y)
+abs(evaluate(spline,  Date(2018, 7, 21))) < tol
+abs(evaluate(spline,  Date(2019, 7, 21))) < tol
+abs(evaluate(spline,  Date(2000, 7, 21))) < tol
+
+## Testing with two dates provided.
+x = Array{Date}(2)
+x[1] = Date(2018, 7, 21)
+x[2] = Date(2018, 8, 21)
+y = Array{Float64}(2)
+y[1] = 0.0
+y[2] = 1.0
+spline = Schumaker(x,y)
+abs(evaluate(spline,  Date(2018, 7, 21))) < tol
+abs(evaluate(spline,  Date(2018, 7, 30))) > tol
+abs(evaluate(spline,  Date(2018, 8, 21)) - y[2]) < tol
+abs(evaluate(spline,  Date(2019, 8, 21)) - y[2]) > tol
+
+spline = Schumaker(x, y , extrapolation =  "Constant")
+abs(evaluate(spline,  Date(2018, 8, 21)) - y[2]) < tol
+abs(evaluate(spline,  Date(2019, 8, 21)) - y[2]) < tol
+
+## Testing with three dates provided.
+x = Array{Date}(3)
+x[1] = Date(2018, 7, 21)
+x[2] = Date(2018, 8, 21)
+x[3] = Date(201, 9, 21)
+y = Array{Float64}(3)
+y[1] = 0.0
+y[2] = 1.0
+y[3] = 1.3
+spline = Schumaker(x,y)

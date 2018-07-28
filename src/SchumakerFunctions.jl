@@ -13,20 +13,45 @@ struct Schumaker
     IntStarts_::Array{Float64}
     IntEnds_::Array{Float64}
     coefficient_matrix_::Array{Float64}
-    function Schumaker(x::Array{Float64},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = "Curve")
+    function Schumaker(x::Array{Float64},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = "Curve")
+        if length(x) == 1
+            IntStarts = Array{Float64}(1)
+            IntStarts[1] = x[1]
+            IntEnds = IntStarts
+            SpCoefs = [0 0 y[1]]
+            # Note that this hardcodes in constant extrapolation. This is only
+            # feasible one as we do not have derivative or curve information.
+            return new(IntStarts, IntEnds, SpCoefs)
+        elseif length(x) == 2
+            IntStarts = Array{Float64}(1)
+            IntStarts[1] = x[1]
+            IntEnds = Array{Float64}(1)
+            IntEnds[1] = x[2]
+            linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
+            SpCoefs = [0 linear_coefficient y[1]]
+            # In this case it defaults to curve extrapolation (which is same as linear here)
+            # So we just alter in case constant is specified.
+            if extrapolation != "Constant"
+                return new(IntStarts, IntEnds, SpCoefs)
+            else
+                matrix_without_extrapolation = hcat(IntStarts, IntEnds, SpCoefs)
+                matrix_with_extrapolation    = extrapolate(matrix_without_extrapolation, extrapolation, x, y)
+                return new(matrix_with_extrapolation[:,1], matrix_with_extrapolation[:,2], matrix_with_extrapolation[:,3:5])
+            end
+        end
         if length(gradients) == 0
            gradients = imputeGradients(x,y)
         end
         IntStarts, IntEnds, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
-        new(IntStarts, IntEnds, SpCoefs)
+        return new(IntStarts, IntEnds, SpCoefs)
      end
-    function Schumaker(x::Array{Int},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+    function Schumaker(x::Array{Int},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = ("Curve"))
         x_as_Float64s = convert.(Float64, x)
-        return Schumaker(x_as_Float64s , y , gradients , extrapolation)
+        return Schumaker(x_as_Float64s , y , gradients = gradients , extrapolation = extrapolation)
     end
-    function Schumaker(x::Array{Date},y::Array{Float64},gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+    function Schumaker(x::Array{Date},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = ("Curve"))
         days_as_ints = Dates.days.(x)
-        return Schumaker(days_as_ints , y , gradients , extrapolation)
+        return Schumaker(days_as_ints , y , gradients = gradients , extrapolation = extrapolation)
     end
 end
 
