@@ -1,9 +1,9 @@
 using SchumakerSpline
-using Base.Dates
+using Dates
 tol = 10*eps()
 
 StartDate = Date(2018, 7, 21)
-x = Array{Date}(1000)
+x = Array{Date}(undef,1000)
 for i in 1:1000
     x[i] = StartDate +Dates.Day(2* (i-1))
 end
@@ -39,9 +39,9 @@ analytical = analytic_integral(lhs,rhs)
 abs(  analytical - numerical_integral  ) < 1
 
 ## Testing with only one date provided.
-x = Array{Date}(1)
+x = Array{Date}(undef, 1)
 x[1] = Date(2018, 7, 21)
-y = Array{Float64}(1)
+y = Array{Float64}(undef, 1)
 y[1] = 0.0
 spline = Schumaker(x,y)
 abs(evaluate(spline,  Date(2018, 7, 21))) < tol
@@ -49,10 +49,10 @@ abs(evaluate(spline,  Date(2019, 7, 21))) < tol
 abs(evaluate(spline,  Date(2000, 7, 21))) < tol
 
 ## Testing with two dates provided.
-x = Array{Date}(2)
+x = Array{Date}(undef,2)
 x[1] = Date(2018, 7, 21)
 x[2] = Date(2018, 8, 21)
-y = Array{Float64}(2)
+y = Array{Float64}(undef,2)
 y[1] = 0.0
 y[2] = 1.0
 spline = Schumaker(x,y)
@@ -66,11 +66,11 @@ abs(evaluate(spline,  Date(2018, 8, 21)) - y[2]) < tol
 abs(evaluate(spline,  Date(2019, 8, 21)) - y[2]) < tol
 
 ## Testing with three dates provided.
-x = Array{Date}(3)
+x = Array{Date}(undef,3)
 x[1] = Date(2018, 7, 21)
 x[2] = Date(2018, 8, 21)
 x[3] = Date(2018, 9, 21)
-y = Array{Float64}(3)
+y = Array{Float64}(undef,3)
 y[1] = 0.0
 y[2] = 1.0
 y[3] = 1.3

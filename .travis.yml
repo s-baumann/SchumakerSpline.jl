@@ -10,7 +10,7 @@ os:
 
 julia:
 
- - 0.6
+ - 1.0
 
 notifications:
 

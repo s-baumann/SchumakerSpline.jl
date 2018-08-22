@@ -14,7 +14,7 @@ end
 evaluate(spline, 11.5)
 
 # Testing second derivatives
-xArray = linspace(1, 6, 1000)
+xArray = range(1, stop=6, length=1000)
 second_derivatives = evaluate.(spline, xArray,2)
 maximum(second_derivatives) < tol
 

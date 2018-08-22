@@ -1,6 +1,6 @@
 module SchumakerSpline
 
-using Base.Dates
+using Dates
 
 include("SchumakerFunctions.jl")
 
