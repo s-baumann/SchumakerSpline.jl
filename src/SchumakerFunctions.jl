@@ -15,7 +15,7 @@ struct Schumaker
     coefficient_matrix_::Array{Float64}
     function Schumaker(x::Array{Float64},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = "Curve")
         if length(x) == 1
-            IntStarts = Array{Float64}(1)
+            IntStarts = Array{Float64}(undef,1)
             IntStarts[1] = x[1]
             IntEnds = IntStarts
             SpCoefs = [0 0 y[1]]
@@ -23,9 +23,9 @@ struct Schumaker
             # feasible one as we do not have derivative or curve information.
             return new(IntStarts, IntEnds, SpCoefs)
         elseif length(x) == 2
-            IntStarts = Array{Float64}(1)
+            IntStarts = Array{Float64}(undef,1)
             IntStarts[1] = x[1]
-            IntEnds = Array{Float64}(1)
+            IntEnds = Array{Float64}(undef,1)
             IntEnds[1] = x[2]
             linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
             SpCoefs = [0 linear_coefficient y[1]]
@@ -54,6 +54,8 @@ struct Schumaker
         return Schumaker(days_as_ints , y , gradients = gradients , extrapolation = extrapolation)
     end
 end
+
+Base.broadcastable(e::Schumaker) = Ref(e)
 
 """
 Evaluates the spline at a point. The point can be specified as a Float64, Int or Date.

@@ -11,7 +11,7 @@ end
 
 # Testing second derivatives
 xArray = range(1, stop=6, length=1000)
-second_derivatives = evaluate.(spline, xArray,2)
+second_derivatives = evaluate.(spline, xArray, 2)
 maximum(second_derivatives) < tol
 
 # Testing Integrals
