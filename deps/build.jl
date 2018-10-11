@@ -1,1 +1,1 @@
-Pkg.add("Dates")
+add Dates
