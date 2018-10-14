@@ -1,15 +1,14 @@
 using Documenter
 using SchumakerSpline
 
-makedocs(modules=[SchumakerSpline],
-# html options
+makedocs(
+ # options
+ modules=[SchumakerSpline],
+ # html options
  format = :html,
  sitename = "SchumakerSpline.jl",
  pages = [
-     "Introduction" => "index.md",
-     "Tutorial" => [
-     "Introduction" => "index.md",
-     ],
+     "Introduction" => ["index.md"],
  ],
 html_canonical = "https://s-baumann.github.io/SchumakerSpline.jl/latest/",
 )
