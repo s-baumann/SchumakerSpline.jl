@@ -1,6 +1,6 @@
-site_name:           SchumakerSpline
-repo_url:            https://github.com/s-baumann/SchumakerSpline
-site_description:    Description
+site_name:           SchumakerSpline.jl
+repo_url:            https://github.com/s-baumann/SchumakerSpline.jl
+site_description:    Package for implementing a shape preserving spline
 site_author:         Stuart Baumann & Margaryta Klymak
 theme:               readthedocs
 
@@ -22,6 +22,3 @@ docs_dir: 'build'
 
 pages:
 - Introduction: index.md
-- Tutorial:
-  - Main Function: tutorials/Schumaker.md
-  - Example Application: tutorials/Example.md

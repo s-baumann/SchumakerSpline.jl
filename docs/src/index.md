@@ -11,6 +11,7 @@ A Julia package to create a shape preserving spline. This is a shape preserving 
 
 This package has the same basic functionality as the R package called [schumaker](https://cran.r-project.org/web/packages/schumaker/index.html).
 
+If you want to do algebraic operations on splines you can also use a schumaker spline through the [UnivariateFunctions](https://github.com/s-baumann/UnivariateFunctions.jl) package.
 
 <a id='Inputs-1'></a>
 
@@ -22,8 +23,4 @@ And secondly there are three options for out of sample prediction.
 
   * Curve - This is where the quadratic curve that is present in the first and last interval are used to predict points before the first interval and after the last interval respectively.
   * Linear - This is where a line is extended out before the first interval and after the last interval. The slope of the line is given by the derivative at the start of the first interval and end of the last interval.
-  * Constant - This is where the first and last y values are used for prediction before the first point of the interval and after the last part of the interval respectively.  
-
-## Installation 
-
-```@contents Pages = [     "tutorials/Installation.md",     ] Depth = 2 ```  ## The functions of the package  ```@contents Pages = [     "tutorials/Functions.md",     ] Depth = 2 ```
+  * Constant - This is where the first and last y values are used for prediction before the first point of the interval and after the last part of the interval respectively.
