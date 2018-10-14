@@ -11,7 +11,7 @@ makedocs(modules=[SchumakerSpline],
      "Introduction" => "index.md",
      ],
  ],
-html_canonical = "https://s-baumann.github.io/SchumakerSpline.jl/latest/",
+html_canonical = "https://s-baumann.github.io/SchumakerSpline.jl/",
 )
 deploydocs(
  repo = "github.com/s-baumann/SchumakerSpline.jl.git",
