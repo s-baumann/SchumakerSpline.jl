@@ -1,6 +1,6 @@
 authors = ["Stuart Baumann <stuart@stuartbaumann.com>"]
 name = "SchumakerSpline"
-uuid = "6a4f40f0-ceed-11e8-3e09-1bd68f8c6e72"
+uuid = "65e68595-3a03-5ff5-a6a2-f05fa774f32e"
 version = "1.0.3"
 
 [deps]
