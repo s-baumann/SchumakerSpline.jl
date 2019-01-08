@@ -1,3 +1,11 @@
+
+@enum Schumaker_ExtrapolationSchemes begin
+    Curve = 0
+    Linear = 1
+    Constant = 2
+end
+
+
 """
 Creates a Schumaker spline.
 ### Takes
@@ -10,33 +18,32 @@ Creates a Schumaker spline.
 * A spline object
  """
 struct Schumaker
-    IntStarts_::Array{Float64}
-    IntEnds_::Array{Float64}
-    coefficient_matrix_::Array{Float64}
-    function Schumaker(x::Array{Float64},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = "Curve")
-        if length(x) == 1
-            IntStarts = Array{Float64}(undef,1)
-            IntStarts[1] = x[1]
+    IntStarts_::Array{Float64,1}
+    IntEnds_::Array{Float64,1}
+    coefficient_matrix_::Array{Float64,2}
+    function Schumaker(x::Array{Float64,1},y::Array{Float64,1} ; gradients::Union{Missing,Array{Float64,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve)
+        if length(x) == 0
+            error("Zero length x vector is insufficient to create Schumaker Spline.")
+        elseif length(x) == 1
+            IntStarts = Array{Float64,1}(x)
             IntEnds = IntStarts
             SpCoefs = [0 0 y[1]]
             # Note that this hardcodes in constant extrapolation. This is only
             # feasible one as we do not have derivative or curve information.
             return new(IntStarts, IntEnds, SpCoefs)
         elseif length(x) == 2
-            IntStarts = Array{Float64}(undef,1)
-            IntStarts[1] = x[1]
-            IntEnds = Array{Float64}(undef,1)
-            IntEnds[1] = x[2]
+            IntStarts = Array{Float64,1}([x[1]])
+            IntEnds   = Array{Float64,1}([x[2]])
             linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
             SpCoefs = [0 linear_coefficient y[1]]
             # In this case it defaults to curve extrapolation (which is same as linear here)
             # So we just alter in case constant is specified.
-            if extrapolation != "Constant"
-                return new(IntStarts, IntEnds, SpCoefs)
-            else
+            if extrapolation == Constant
                 matrix_without_extrapolation = hcat(IntStarts, IntEnds, SpCoefs)
                 matrix_with_extrapolation    = extrapolate(matrix_without_extrapolation, extrapolation, x, y)
                 return new(matrix_with_extrapolation[:,1], matrix_with_extrapolation[:,2], matrix_with_extrapolation[:,3:5])
+            else
+                return new(IntStarts, IntEnds, SpCoefs)
             end
         end
         if length(gradients) == 0
@@ -45,11 +52,11 @@ struct Schumaker
         IntStarts, IntEnds, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
         return new(IntStarts, IntEnds, SpCoefs)
      end
-    function Schumaker(x::Array{Int},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+    function Schumaker(x::Array{Int,1},y::Array{Float64,1} ; gradients::Union{Missing,Array{Float64,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve)
         x_as_Float64s = convert.(Float64, x)
         return Schumaker(x_as_Float64s , y , gradients = gradients , extrapolation = extrapolation)
     end
-    function Schumaker(x::Array{Date},y::Array{Float64} ; gradients::Array{Any} = [], extrapolation::String = ("Curve"))
+    function Schumaker(x::Array{Date,1},y::Array{Float64,1} ; gradients::Union{Missing,Array{Float64,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve)
         days_as_ints = Dates.days.(x)
         return Schumaker(days_as_ints , y , gradients = gradients , extrapolation = extrapolation)
     end
@@ -156,7 +163,7 @@ Imputes gradients based on a vector of x and y coordinates.
 ### Returns
  * A Float64 vector of gradients for each input point
 """
-function imputeGradients(x::Array{Float64},y::Array{Float64})
+function imputeGradients(x::Array{Float64,1},y::Array{Float64,1})
      n = length(x)
      # Judd (1998), page 233, second last equation
      L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
@@ -181,7 +188,7 @@ Splits an interval into 2 subintervals and creates the quadratic coefficients
 ### Returns
  * A 2 x 5 matrix. The first column is the x values of start of the two subintervals. The second column is the ends. The last 3 columns are quadratic coefficients in two subintervals.
 """
-function schumakerIndInterval(s::Array{Float64},z::Array{Float64},Smallt::Array{Float64})
+function schumakerIndInterval(s::Array{Float64,1},z::Array{Float64,1},Smallt::Array{Float64,1})
    # The SchumakerIndInterval function takes in each interval individually
    # and returns the location of the knot as well as the quadratic coefficients in each subinterval.
 
@@ -238,7 +245,7 @@ function schumakerIndInterval(s::Array{Float64},z::Array{Float64},Smallt::Array{
  * A vector of interval ends
  * A matrix of all coefficients
   """
- function getCoefficientMatrix(x::Array{Float64},y::Array{Float64},gradients::Array{Float64}, extrapolation::String)
+ function getCoefficientMatrix(x::Array{Float64,1},y::Array{Float64,1},gradients::Array{Float64,1}, extrapolation::Schumaker_ExtrapolationSchemes)
    n = length(x)
    fullMatrix = schumakerIndInterval([gradients[1] gradients[2]], [y[1] y[2]], [x[1] x[2]] )
     for intrval = 2:(n-1)
@@ -263,7 +270,7 @@ function schumakerIndInterval(s::Array{Float64},z::Array{Float64},Smallt::Array{
 ### Returns
   * A new version of fullMatrix with out of sample prediction built into it.
 """
-function extrapolate(fullMatrix::Array{Float64,2}, extrapolation::String, x::Array{Float64}, y::Array{Float64})
+function extrapolate(fullMatrix::Array{Float64,2}, extrapolation::Schumaker_ExtrapolationSchemes, x::Array{Float64,1}, y::Array{Float64,1})
   if extrapolation == "Curve"
     return fullMatrix
   end

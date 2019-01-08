@@ -61,7 +61,7 @@ abs(evaluate(spline,  Date(2018, 7, 30))) > tol
 abs(evaluate(spline,  Date(2018, 8, 21)) - y[2]) < tol
 abs(evaluate(spline,  Date(2019, 8, 21)) - y[2]) > tol
 
-spline = Schumaker(x, y , extrapolation =  "Constant")
+spline = Schumaker(x, y , extrapolation =  Constant)
 abs(evaluate(spline,  Date(2018, 8, 21)) - y[2]) < tol
 abs(evaluate(spline,  Date(2019, 8, 21)) - y[2]) < tol
 
