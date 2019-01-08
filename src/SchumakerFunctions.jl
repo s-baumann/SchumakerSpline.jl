@@ -137,14 +137,10 @@ function evaluate_integral(spline::Schumaker,lhs::Float64, rhs::Float64)
     end
 end
 function evaluate_integral(spline::Schumaker,lhs::Int, rhs::Int)
-    lhs_as_Float64 = convert(Float64, lhs)
-    rhs_as_Float64 = convert(Float64, rhs)
-    return evaluate_integral(spline,lhs_as_Float64, rhs_as_Float64)
+    return evaluate_integral(spline, convert(Float64, lhs), convert(Float64, rhs))
 end
 function evaluate_integral(spline::Schumaker,lhs::Date, rhs::Date)
-    lhs_as_int = Dates.days.(lhs)
-    rhs_as_int = Dates.days.(rhs)
-    return evaluate_integral(spline,lhs_as_int, rhs_as_int)
+    return evaluate_integral(spline, Dates.days.(lhs) , Dates.days.(rhs))
 end
 function section_integral(spline::Schumaker,lhs::Float64,  rhs::Float64)
     # Note that the lhs is used to infer the interval.
@@ -273,14 +269,14 @@ function schumakerIndInterval(s::Array{Float64,1},z::Array{Float64,1},Smallt::Ar
   * A new version of fullMatrix with out of sample prediction built into it.
 """
 function extrapolate(fullMatrix::Array{Float64,2}, extrapolation::Schumaker_ExtrapolationSchemes, x::Array{Float64,1}, y::Array{Float64,1})
-  if extrapolation == "Curve"
+  if extrapolation == Curve
     return fullMatrix
   end
 
   dim = size(fullMatrix)[1]
   Botx   = fullMatrix[1,1]
   Boty   = y[1]
-  if extrapolation == "Linear"
+  if extrapolation == Linear
     BotB = fullMatrix[1 , 4]
     BotC   = Boty - BotB
   else
@@ -290,7 +286,7 @@ function extrapolate(fullMatrix::Array{Float64,2}, extrapolation::Schumaker_Extr
   BotRow = [ Botx-1, Botx, 0.0, BotB, BotC]
   Topx = fullMatrix[dim,2]
   Topy = y[length(y)]
-  if extrapolation == "Linear"
+  if extrapolation == Linear
     TopB = fullMatrix[dim ,4]
     TopC = Topy
   else
