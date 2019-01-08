@@ -1,4 +1,6 @@
-
+"""
+This creates an enum which details how extrapolation from the interpolation domain should be done.
+"""
 @enum Schumaker_ExtrapolationSchemes begin
     Curve = 0
     Linear = 1
@@ -46,7 +48,7 @@ struct Schumaker
                 return new(IntStarts, IntEnds, SpCoefs)
             end
         end
-        if length(gradients) == 0
+        if ismissing(gradients)
            gradients = imputeGradients(x,y)
         end
         IntStarts, IntEnds, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
@@ -247,7 +249,7 @@ function schumakerIndInterval(s::Array{Float64,1},z::Array{Float64,1},Smallt::Ar
   """
  function getCoefficientMatrix(x::Array{Float64,1},y::Array{Float64,1},gradients::Array{Float64,1}, extrapolation::Schumaker_ExtrapolationSchemes)
    n = length(x)
-   fullMatrix = schumakerIndInterval([gradients[1] gradients[2]], [y[1] y[2]], [x[1] x[2]] )
+   fullMatrix = schumakerIndInterval([gradients[1], gradients[2]], [y[1], y[2]], [x[1], x[2]] )
     for intrval = 2:(n-1)
       Smallt = [ x[intrval] , x[intrval + 1] ]
       s = [ y[intrval], y[intrval + 1] ]

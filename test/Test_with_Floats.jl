@@ -29,4 +29,4 @@ abs(analytic_integral(lhs,rhs) - numerical_integral) < 0.01
 lhs = 0.8
 rhs = 4.0
 numerical_integral = evaluate_integral(spline, lhs,rhs)
-abs(analytic_integral(lhs,rhs) - numerical_integral) < 0.01
+abs(analytic_integral(lhs,rhs) - numerical_integral) < 0.03
