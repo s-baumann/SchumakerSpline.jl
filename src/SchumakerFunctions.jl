@@ -272,7 +272,6 @@ function extrapolate(fullMatrix::Array{Float64,2}, extrapolation::Schumaker_Extr
   if extrapolation == Curve
     return fullMatrix
   end
-
   dim = size(fullMatrix)[1]
   Botx   = fullMatrix[1,1]
   Boty   = y[1]
