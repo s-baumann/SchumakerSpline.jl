@@ -45,3 +45,11 @@ first_derivs = analytical_first_derivative.(x)
 spline = Schumaker(x,y; gradients = first_derivs)
 first_derivatives = evaluate.(spline, x, 1)
 maximum(abs.(first_derivatives .- analytical_first_derivative.(x))) < tol
+# Testing creation of a spline with only the gradients on the edges.
+first_derivs = analytical_first_derivative.(x)
+spline = Schumaker(x,y; left_gradient = first_derivs[1], right_gradient = first_derivs[length(first_derivs)])
+first_derivatives = evaluate.(spline, x, 1)
+gaps = abs.(first_derivatives .- analytical_first_derivative.(x))
+gaps[1] < tol
+gaps[length(gaps)] < tol
+minimum(gaps[2:(length(gaps)-1)]) > 10* tol
