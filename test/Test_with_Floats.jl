@@ -3,6 +3,7 @@ tol = 10*eps()
 
 x = collect(range(1, stop=6, length=1000))
 y = log.(x) + sqrt.(x)
+analytical_first_derivative(e) = 1/e + 0.5 * e^(-0.5)
 
 spline = Schumaker(x,y)
 for i in 1:length(x)
@@ -11,7 +12,6 @@ end
 
 # Testing First derivative.
 first_derivatives = evaluate.(spline, x, 1)
-analytical_first_derivative(e) = 1/e + 0.5 * e^(-0.5)
 maximum(abs.(first_derivatives .- analytical_first_derivative.(x))) < 0.002
 
 # Testing second derivatives
@@ -38,3 +38,10 @@ lhs = 0.8
 rhs = 4.0
 numerical_integral = evaluate_integral(spline, lhs,rhs)
 abs(analytic_integral(lhs,rhs) - numerical_integral) < 0.03
+
+
+# Testing creation of a spline with gradient information.
+first_derivs = analytical_first_derivative.(x)
+spline = Schumaker(x,y; gradients = first_derivs)
+first_derivatives = evaluate.(spline, x, 1)
+maximum(abs.(first_derivatives .- analytical_first_derivative.(x))) < tol
