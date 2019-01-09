@@ -11,5 +11,16 @@ julia:
 notifications:
 email: false
 
-after_success:
-  - julia -e 'if VERSION >= v"0.7.0-" using Pkg end; cd(Pkg.dir("SchumakerSpline")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+# This does the documentation
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+                                               Pkg.instantiate()'
+        - julia --project=docs/ docs/make.jl
+
+coveralls: true
+coverage: true
