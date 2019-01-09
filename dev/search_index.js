@@ -13,7 +13,15 @@ var documenterSearchIndex = {"docs": [
     "page": "SchumakerSpline.jl",
     "title": "SchumakerSpline.jl",
     "category": "section",
-    "text": "A Julia package to create a shape preserving spline. This is guaranteed to be monotonic and concave or convex if the data is monotonic and concave or convex. It does not use any optimisation and is therefore quick and smoothly converges to a fixed point in economic dynamics problems including value function iteration. This package has the same functionality as the R package called schumaker.pages = [\"index.md\",\n         \"examples.md\"]\nDepth = 2"
+    "text": "A simple shape preserving spline implementation in Julia.A Julia package to create a shape preserving spline. This is a shape preserving spline which is guaranteed to be monotonic and concave/convex if the data is monotonic and concave/convex. It does not use any numerical optimisation and is therefore quick and smoothly converges to a fixed point in economic dynamics problems including value function iteration. Analytical derivatives and integrals of the spline can easily be taken through the evaluate and evaluate_integral functions.This package has the same basic functionality as the R package called schumaker.If you want to do algebraic operations on splines you can also use a schumaker spline through the UnivariateFunctions package."
+},
+
+{
+    "location": "#Inputs-1",
+    "page": "SchumakerSpline.jl",
+    "title": "Inputs",
+    "category": "section",
+    "text": "There are two optional setting in creating a spline. Firstly the gradients at each of the (x,y) points can be input to give more accuracy. If not supplied these are estimated from the points provided.And secondly there are three options for out of sample prediction.Curve - This is where the quadratic curve that is present in the first and last interval are used to predict points before the first interval and after the last interval respectively.\nLinear - This is where a line is extended out before the first interval and after the last interval. The slope of the line is given by the derivative at the start of the first interval and end of the last interval.\nConstant - This is where the first and last y values are used for prediction before the first point of the interval and after the last part of the interval respectively.pages = [\"index.md\",\n         \"examples.md\"]\nDepth = 2"
 },
 
 {
