@@ -19,11 +19,13 @@ Creates a Schumaker spline.
 ### Takes
 * x - A Float64 vector of x coordinates.
 * y - A Float64 vector of y coordinates.
-* gradients (optional)- A Float64 vector of gradients at each point. If not supplied these are imputed from x and y.
 * extrapolation (optional) - This should be Curve, Linear or Constant specifying how to interpolate outside of the sample domain. By default it is Curve which extends out the first and last quadratic curves. The other options are Linear which extends the line (from first and last curve) out from the first and last point and Constant which extends out the y value at the first and last point.
+* gradients (optional)- A Float64 vector of gradients at each point. If not supplied these are imputed from x and y.
+* left_gradient - The gradient at the lowest value of x in the domain. This will override the gradient imputed or submitted in the gradients optional argument (if it is submitted there)
+* right_gradient - The gradient at the highest value of x in the domain. This will override the gradient imputed or submitted in the gradients optional argument (if it is submitted there)
 
 ### Returns
-* A spline object
+* A Schumaker object which details the spline. This object can then be evaluated with evaluate or evaluate_integral.
  """
 struct Schumaker
     IntStarts_::Array{Float64,1}
