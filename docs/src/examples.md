@@ -43,3 +43,15 @@ plot(xrange , values; label = "Spline")
 plot!(xrange, derivative_values; label = "First Derivative")
 plot!(xrange, second_derivative_values; label = "Second Derivative")
 ```
+
+
+If we did have gradient information we could get a better approximation by using it. In this case our gradients are:
+```
+analytical_first_derivative(e) = 1/e + 0.5 * e^(-0.5)
+first_derivs = analytical_first_derivative.(xrange)
+```
+and we can generate a spline using these gradients with:
+```
+spline = Schumaker(x,y; gradients = first_derivs)
+```
+We could also have only specified the left or the right gradients using the left_gradient and right_gradient optional arguments.
