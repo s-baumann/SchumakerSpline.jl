@@ -17,11 +17,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#Inputs-1",
+    "location": "#Optional-parameters-1",
     "page": "SchumakerSpline.jl",
-    "title": "Inputs",
+    "title": "Optional parameters",
     "category": "section",
-    "text": "There are two optional setting in creating a spline. Firstly the gradients at each of the (x,y) points can be input to give more accuracy. If not supplied these are estimated from the points provided.And secondly there are three options for out of sample prediction.Curve - This is where the quadratic curve that is present in the first and last interval are used to predict points before the first interval and after the last interval respectively.\nLinear - This is where a line is extended out before the first interval and after the last interval. The slope of the line is given by the derivative at the start of the first interval and end of the last interval.\nConstant - This is where the first and last y values are used for prediction before the first point of the interval and after the last part of the interval respectively.pages = [\"index.md\",\n         \"examples.md\"]\nDepth = 2"
+    "text": ""
+},
+
+{
+    "location": "#Gradients.-1",
+    "page": "SchumakerSpline.jl",
+    "title": "Gradients.",
+    "category": "section",
+    "text": "The gradients at each of the (x,y) points can be input to give more accuracy. If not supplied these are estimated from the points provided. It is also possible to input on the gradients on the edges of the x domain and have all of the intermediate gradients imputed."
+},
+
+{
+    "location": "#Out-of-sample-prediction.-1",
+    "page": "SchumakerSpline.jl",
+    "title": "Out of sample prediction.",
+    "category": "section",
+    "text": "There are three options for out of sample prediction.Curve - This is where the quadratic curve that is present in the first and last interval are used to predict points before the first interval and after the last interval respectively.\nLinear - This is where a line is extended out before the first interval and after the last interval. The slope of the line is given by the derivative at the start of the first interval and end of the last interval.\nConstant - This is where the first and last y values are used for prediction before the first point of the interval and after the last part of the interval respectively.pages = [\"index.md\",\n         \"examples.md\"]\nDepth = 2"
 },
 
 {
@@ -37,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Examples",
     "category": "section",
-    "text": "Generating some example datax = [1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]\ny = log.(x) + sqrt.(x)\ngradients = missingIn this case we do not have gradients information and so gradients will be imputed from the x and y data.We can create a spline and plot it with linear extrapolation.using SchumakerSpline\nusing Plots\n########################\n# Linear Extrapolation #\nspline = Schumaker(x,y; extrapolation = Linear)\n# Now plotting the spline\nxrange =  collect(range(-5, stop=10, length=100))\nvalues  = evaluate.(spline, xrange)\nderivative_values  = evaluate.(spline, xrange, 1 )\nsecond_derivative_values  = evaluate.(spline, xrange , 2 )\nplot(xrange , values; label = \"Spline\")\nplot!(xrange, derivative_values; label = \"First Derivative\")\nplot!(xrange, second_derivative_values; label = \"Second Derivative\")We can now do the same with constant extrapolation.##########################\n# Constant Extrapolation #\nextrapolation = Constant\nspline = Schumaker(x,y; extrapolation = Constant)\n# Now plotting the spline\nxrange =  collect(range(-5, stop=10, length=100))\nvalues  = evaluate.(spline, xrange)\nderivative_values  = evaluate.(spline, xrange, 1 )\nsecond_derivative_values  = evaluate.(spline, xrange , 2 )\nplot(xrange , values; label = \"Spline\")\nplot!(xrange, derivative_values; label = \"First Derivative\")\nplot!(xrange, second_derivative_values; label = \"Second Derivative\")"
+    "text": "Generating some example datax = [1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]\ny = log.(x) + sqrt.(x)\ngradients = missingIn this case we do not have gradients information and so gradients will be imputed from the x and y data.We can create a spline and plot it with linear extrapolation.using SchumakerSpline\nusing Plots\n########################\n# Linear Extrapolation #\nspline = Schumaker(x,y; extrapolation = Linear)\n# Now plotting the spline\nxrange =  collect(range(-5, stop=10, length=100))\nvalues  = evaluate.(spline, xrange)\nderivative_values  = evaluate.(spline, xrange, 1 )\nsecond_derivative_values  = evaluate.(spline, xrange , 2 )\nplot(xrange , values; label = \"Spline\")\nplot!(xrange, derivative_values; label = \"First Derivative\")\nplot!(xrange, second_derivative_values; label = \"Second Derivative\")We can now do the same with constant extrapolation.##########################\n# Constant Extrapolation #\nextrapolation = Constant\nspline = Schumaker(x,y; extrapolation = Constant)\n# Now plotting the spline\nxrange =  collect(range(-5, stop=10, length=100))\nvalues  = evaluate.(spline, xrange)\nderivative_values  = evaluate.(spline, xrange, 1 )\nsecond_derivative_values  = evaluate.(spline, xrange , 2 )\nplot(xrange , values; label = \"Spline\")\nplot!(xrange, derivative_values; label = \"First Derivative\")\nplot!(xrange, second_derivative_values; label = \"Second Derivative\")If we did have gradient information we could get a better approximation by using it. In this case our gradients are:analytical_first_derivative(e) = 1/e + 0.5 * e^(-0.5)\nfirst_derivs = analytical_first_derivative.(xrange)and we can generate a spline using these gradients with:spline = Schumaker(x,y; gradients = first_derivs)We could also have only specified the left or the right gradients using the leftgradient and rightgradient optional arguments."
 },
 
 ]}
