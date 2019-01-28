@@ -2,7 +2,7 @@
 
 *A simple shape preserving spline implementation in Julia.*
 
-A Julia package to create a shape preserving spline. This is a shape preserving spline which is guaranteed to be monotonic and concave/convex if the data is monotonic and concave/convex. It does not use any numerical optimisation and is therefore quick and smoothly converges to a fixed point in economic dynamics problems including value function iteration. Analytical derivatives and integrals of the spline can easily be taken through the evaluate and evaluate_integral functions.
+A Julia package to create a shape preserving spline. This is a shape preserving spline which is guaranteed to be monotonic and concave/convex if the data is monotonic and concave/convex. It does not use any numerical optimisation and is therefore quick and smoothly converges to a fixed point in economic dynamics problems including value function iteration. Analytical derivatives and integrals of the spline can easily be taken through the evaluate and evaluate\_integral functions.
 
 This package has the same basic functionality as the R package called [schumaker](https://cran.r-project.org/web/packages/schumaker/index.html).
 

@@ -54,4 +54,4 @@ and we can generate a spline using these gradients with:
 ```
 spline = Schumaker(x,y; gradients = first_derivs)
 ```
-We could also have only specified the left or the right gradients using the left_gradient and right_gradient optional arguments.
+We could also have only specified the left or the right gradients using the left\_gradient and right\_gradient optional arguments.
