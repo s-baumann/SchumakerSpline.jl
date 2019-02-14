@@ -4,7 +4,6 @@ tol = 10*eps()
 x = collect(range(1, stop=6, length=1000))
 y = log.(x) + sqrt.(x)
 analytical_first_derivative(e) = 1/e + 0.5 * e^(-0.5)
-
 spline = Schumaker(x,y)
 for i in 1:length(x)
     abs(evaluate(spline, x[i]) - y[2]) < tol
@@ -53,3 +52,28 @@ gaps = abs.(first_derivatives .- analytical_first_derivative.(x))
 gaps[1] < tol
 gaps[length(gaps)] < tol
 minimum(gaps[2:(length(gaps)-1)]) > 10* tol
+
+# Testing Rootfinder and OptimaFinder
+
+# This should have no roots or optima.
+rootfinder = find_roots(spline)
+optimafinder = find_optima(spline)
+length(rootfinder.roots) == 0
+length(optimafinder.optima) == 0
+
+# This has a root but no optima:
+y = y .-2.0
+spline2 = Schumaker(x,y)
+rootfinder = find_roots(spline2)
+optimafinder = find_optima(spline2)
+length(rootfinder.roots) == 1
+length(optimafinder.optima) == 0
+
+y = (x .- 3).^2 .+ 6 # Should be an optima at x = 3. But no roots.
+spline3 = Schumaker(x,y)
+rootfinder = find_roots(spline3)
+optimafinder = find_optima(spline3)
+length(rootfinder.roots) == 0
+length(optimafinder.optima) == 1
+abs(optimafinder.optima[1] - 3.0) < 1e-2
+optimafinder.optima_types[1] == :Minimum
