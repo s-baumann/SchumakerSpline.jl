@@ -77,3 +77,19 @@ length(rootfinder.roots) == 0
 length(optimafinder.optima) == 1
 abs(optimafinder.optima[1] - 3.0) < 1e-2
 optimafinder.optima_types[1] == :Minimum
+
+
+#=
+# should be two random roots and one optima.
+x = collect(range(-10, stop=10, length=1000))
+function random_function(a::Int)
+    vertex = (mod(a * 97, 89)- 45)/5
+    y = -(x .- vertex).^2 .+ 1
+    sp = Schumaker(x,y)
+    return sp, vertex
+end
+using Optim
+sp, vertex = random_function(2)
+@time optimafinder = find_optima(sp)
+@time optimize(x -> evaluate(sp,x[1])^2, -5.0, 5.0 )
+=#
