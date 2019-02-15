@@ -91,5 +91,5 @@ end
 using Optim
 sp, vertex = random_function(2)
 @time optimafinder = find_optima(sp)
-@time optimize(x -> evaluate(sp,x[1])^2, -5.0, 5.0 )
+@time optimize(x -> evaluate(sp,x[1]), -5.0, 5.0 )
 =#
