@@ -56,10 +56,18 @@ minimum(gaps[2:(length(gaps)-1)]) > 10* tol
 # Testing Rootfinder and OptimaFinder
 
 # This should have no roots or optima.
+y = log.(x) + sqrt.(x)
+spline = Schumaker(x,y)
 rootfinder = find_roots(spline)
 optimafinder = find_optima(spline)
 length(rootfinder.roots) == 0
 length(optimafinder.optima) == 0
+# But it has a point at which it has a value of four:
+fourfinder = find_roots(spline; root_value = 4.0)
+abs(evaluate(spline, fourfinder.roots[1]) - 4.0) < 1e-10
+# and no points where it is negative four::
+negfourfinder = find_roots(spline; root_value = -4.0)
+length(negfourfinder.roots) == 0
 
 # This has a root but no optima:
 y = y .-2.0

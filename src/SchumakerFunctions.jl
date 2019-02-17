@@ -186,11 +186,12 @@ end
 
 
 """
-find_root(spline::Schumaker)
-Finds roots - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find roots.
-
+find_root(spline::Schumaker; root_value::Float64 = 0.0)
+    Finds roots - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find roots.
+    Here root_value can be set to get all points at which the function is equal to the root value. For instance if you want to find all points at which
+    the spline has a value of 1.0.
 """
-function find_roots(spline::Schumaker)
+function find_roots(spline::Schumaker; root_value::Float64 = 0.0)
     roots = Array{Float64,1}(undef,0)
     first_derivatives = Array{Float64,1}(undef,0)
     second_derivatives = Array{Float64,1}(undef,0)
@@ -200,10 +201,10 @@ function find_roots(spline::Schumaker)
         return (roots = roots, first_derivatives = first_derivatives, second_derivatives = second_derivatives)
     else
         for i in 1:(len-1)
-            if abs(sign(constants[i]) - sign(constants[i+1])) > 0.5
+            if abs(sign(constants[i] - root_value) - sign(constants[i+1] - root_value)) > 0.5
                 a = spline.coefficient_matrix_[i,1]
                 b = spline.coefficient_matrix_[i,2]
-                c = spline.coefficient_matrix_[i,3]
+                c = spline.coefficient_matrix_[i,3] - root_value
                 if abs(a) > 1e-13 # Is it quadratic
                     det = sqrt(b^2 - 4*a*c)
                     left_root  = (-b + det) / (2*a) # The x coordinate here is relative to spline.IntStarts_[i]. We want the smallest one that is to the right (ie positive)
