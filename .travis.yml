@@ -22,5 +22,5 @@ jobs:
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
 
-coveralls: false
+coveralls: true
 coverage: true
