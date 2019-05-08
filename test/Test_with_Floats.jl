@@ -101,3 +101,21 @@ sp, vertex = random_function(2)
 @time optimafinder = find_optima(sp)
 @time optimize(x -> evaluate(sp,x[1]), -5.0, 5.0 )
 =#
+
+
+#= Testing AAD. Not in the full test batch to avoid another dependency
+x = collect(range(-10, stop=10, length=1000))
+function random_function(a::Int)
+    vertex = (mod(a * 97, 89)- 45)/5
+    y = -(x .- vertex).^2 .+ 1
+    sp = Schumaker(x,y)
+    return sp, vertex
+end
+sp, vertex = random_function(2)
+function spl(x::Array{<:Real,1})
+    return sum(evaluate.(Ref(sp), x))
+end
+
+using ForwardDiff
+ForwardDiff.gradient(spl, [2,3])
+=#

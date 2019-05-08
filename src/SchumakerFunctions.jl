@@ -96,7 +96,7 @@ Derivatives can also be taken.
 ### Returns
  * A value of the spline or appropriate derivative in the same format as specified in the spline.
 """
-function evaluate(spline::Schumaker, PointToExamine::T,  derivative::Int = 0) where T<:Real
+function evaluate(spline::Schumaker, PointToExamine::T,  derivative::Integer = 0) where T<:Real
     # Derivative of 0 means normal spline evaluation.
     # Derivative of 1, 2 are first and second derivatives respectively.
     IntervalNum = searchsortedlast(spline.IntStarts_, PointToExamine)
