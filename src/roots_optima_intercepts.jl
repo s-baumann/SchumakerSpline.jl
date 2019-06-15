@@ -66,3 +66,69 @@ function find_optima(spline::Schumaker)
     end
     return (optima = optima, optima_types = optima_types)
 end
+
+## Finding intercepts
+"""
+    quadratic_formula_roots(a,b,c)
+A basic application of the textbook quadratic formula.
+"""
+function quadratic_formula_roots(a,b,c)
+    determin = sqrt(b^2 - 4*a*c)
+    roots = [(-b + determin)/(2*a), (-b - determin)/(2*a)]
+    return(roots)
+end
+"""
+    get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval::Tuple{U,U}) where T<:Real where R<:Real where U<:Real
+Finds the point at which two schumaker splines cross over each other within a single interval. This is not exported.
+
+"""
+
+function get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval::Tuple{U,U}) where T<:Real where R<:Real where U<:Real
+    # Getting the coefficients for the first spline.
+    i = searchsortedlast(s1.IntStarts_, interval[1])
+    start1 = s1.IntStarts_[i]
+    a1,b1,c1 = Tuple(s1.coefficient_matrix_[i,:])
+    # Getting the coefficients for the second spline.
+    j = searchsortedlast(s2.IntStarts_, interval[1])
+    start2 = s2.IntStarts_[j]
+    a2,b2,c2 = Tuple(s2.coefficient_matrix_[j,:])
+    # Get implied coefficients for the s1 - s2 quadratic. Pretty simple algebra gets this.
+    # As a helper we define G = start2 - start1. We define A,B,C as coefficients of s1-s2.
+    # The final spline is in terms of (x-start1).
+    G = start1 - start2
+    A = a1 - a2
+    B = b1 - b2 - 2*a2*G
+    C = c1 - c2 - a2*(G^2) - b2*G
+    # Now we need to use quadratic formula to get the roots and pick the root in the interval.
+    roots = quadratic_formula_roots(A,B,C) .+ start1
+    roots_in_interval = roots[(roots .>= interval[1]-10*eps()) .& (roots .<= interval[2]+10*eps())]
+    return(roots_in_interval)
+end
+
+
+function get_intersection_points(s1::Schumaker{T}, s2::Schumaker{R}) where T<:Real where R<:Real
+    # What x locations to loop over
+    all_starts = sort(unique(vcat(s1.IntStarts_, s2.IntStarts_)))
+    start_of_overlap = maximum([minimum(s1.IntStarts_), minimum(s2.IntStarts_)])
+    overlap_starts = all_starts[all_starts .> start_of_overlap]
+    # Getting a container to return results
+    promo_type = promote_type(T,R)
+    locations_of_crossovers = Array{promo_type,1}()
+    # For the first part what function is higher.
+    last_one_greater = evaluate(s1, overlap_starts[1]) > evaluate(s2, overlap_starts[1])
+    for i in 2:length(overlap_starts)
+        start = overlap_starts[i]
+        val_1 = evaluate(s1, start)
+        val_2 = evaluate(s2, start)
+        # Need to take into account the ordering and record when it flips
+        one_greater = val_1 > val_2
+        if one_greater != last_one_greater
+            interval = Tuple([overlap_starts[i-1], overlap_starts[i]])
+            crossover = get_crossover_in_interval(s1, s2, interval)
+            @assert length(crossover) == 1 "Only one crossover expected in interval from a continuous spline."
+            push!(locations_of_crossovers, crossover[1])
+        end
+        last_one_greater = one_greater
+    end
+    return locations_of_crossovers
+end
