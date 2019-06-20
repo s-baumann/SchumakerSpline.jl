@@ -4,10 +4,10 @@ find_root(spline::Schumaker; root_value::T = 0.0)
     Here root_value can be set to get all points at which the function is equal to the root value. For instance if you want to find all points at which
     the spline has a value of 1.0.
 """
-function find_roots(spline::Schumaker; root_value::T = 0.0) where T<:Real
-    roots = Array{Float64,1}(undef,0)
-    first_derivatives = Array{Float64,1}(undef,0)
-    second_derivatives = Array{Float64,1}(undef,0)
+function find_roots(spline::Schumaker{T}; root_value::Real = 0.0) where T<:Real
+    roots = Array{T,1}(undef,0)
+    first_derivatives = Array{T,1}(undef,0)
+    second_derivatives = Array{T,1}(undef,0)
     len = length(spline.IntStarts_)
     constants = spline.coefficient_matrix_[:,3]
     if len < 2

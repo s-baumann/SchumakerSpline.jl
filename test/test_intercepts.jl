@@ -30,3 +30,42 @@ s2 = Schumaker(x2,y2)
 
 crossover_points = get_intersection_points(s1,s2)
 length(crossover_points) == 0
+
+# Testing Rootfinder and OptimaFinder
+from = 0.0
+to = 10.0
+x = collect(range(from, stop=to, length=40))
+# This should have no roots or optima.
+
+y = log.(x) + sqrt.(x)
+spline = Schumaker(x,y)
+rootfinder = find_roots(spline)
+optimafinder = find_optima(spline)
+length(rootfinder.roots) == 0
+length(optimafinder.optima) == 0
+# But it has a point at which it has a value of four:
+fourfinder = find_roots(spline; root_value = 4.0)
+abs(evaluate(spline, fourfinder.roots[1]) - 4.0) < 1e-10
+# and no points where it is negative four::
+negfourfinder = find_roots(spline; root_value = -4.0)
+length(negfourfinder.roots) == 0
+fourfinder2 = find_roots(spline - 2.0; root_value = 2.0)
+abs(fourfinder[:roots][1] - fourfinder2[:roots][1]) < tol
+
+
+# This has a root but no optima:
+y = y .-2.0
+spline2 = Schumaker(x,y)
+rootfinder = find_roots(spline2)
+optimafinder = find_optima(spline2)
+length(rootfinder.roots) == 1
+length(optimafinder.optima) == 0
+
+y = (x .- 3).^2 .+ 6 # Should be an optima at x = 3. But no roots.
+spline3 = Schumaker(x,y)
+rootfinder = find_roots(spline3)
+optimafinder = find_optima(spline3)
+length(rootfinder.roots) == 0
+length(optimafinder.optima) == 1
+abs(optimafinder.optima[1] - 3.0) < 1e-2
+optimafinder.optima_types[1] == :Minimum
