@@ -1,5 +1,6 @@
 module SchumakerSpline
 
+using Plots
 using Dates
 
 include("SchumakerFunctions.jl")
@@ -12,4 +13,6 @@ include("splice_splines.jl")
 export splice_splines
 include("algebra.jl")
 export +,-,*,/
+include("plotting.jl")
+export plot
 end
