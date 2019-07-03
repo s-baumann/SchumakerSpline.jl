@@ -129,7 +129,7 @@ as Reals or Dates.
 ### Returns
  * A Float64 value of the integral.
 """
-function evaluate_integral(spline::Schumaker, lhs::T, rhs::T) where T<:Real
+function evaluate_integral(spline::Schumaker, lhs::Real, rhs::Real)
     first_interval = searchsortedlast(spline.IntStarts_, lhs)
     last_interval = searchsortedlast(spline.IntStarts_, rhs)
     number_of_intervals = last_interval - first_interval
