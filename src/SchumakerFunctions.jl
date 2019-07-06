@@ -31,7 +31,7 @@ struct Schumaker{T<:Real}
     IntStarts_::Array{T,1}
     coefficient_matrix_::Array{T,2}
     function Schumaker(x::Array{T,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-                       left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing) where {T<:Real}
+                       left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing) where T<:Real
         if length(x) == 0
             error("Zero length x vector is insufficient to create Schumaker Spline.")
         elseif length(x) == 1
@@ -67,18 +67,27 @@ struct Schumaker{T<:Real}
         IntStarts, _, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
         return new{T}(IntStarts, SpCoefs)
      end
-    function Schumaker(x::Array{Int,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-         left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing) where {T<:Real}
-        x_as_Ts = convert.(T, x)
-        return Schumaker(x_as_Ts , y; gradients = gradients , extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
+    function Schumaker(IntStarts_::Array{T,1}, coefficient_matrix_::Array{T,2}) where {T<:Real}
+        return new{T}(IntStarts_, coefficient_matrix_)
     end
-    function Schumaker(x::Array{Date,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-        left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing) where {T<:Real}
+    function Schumaker(x::Array{Date,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
+        left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing)
         days_as_ints = Dates.days.(x)
         return Schumaker(days_as_ints , y; gradients = gradients , extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
     end
-    function Schumaker(IntStarts_::Array{T,1}, coefficient_matrix_::Array{T,2}) where {T<:Real}
-        return new{T}(IntStarts_, coefficient_matrix_)
+    function Schumaker(x::Union{Array{T,1},Array{Union{Missing,T},1}},y::Union{Array{R,1},Array{Union{Missing,R},1}} ; gradients::Union{Missing,Array{<:Real,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
+                       left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing) where T<:Real where R<:Real
+        got_both = (!).(ismissing.(x) .| ismissing.(y))
+        promo_type = promote_type(R,T)
+        new_x = convert.(promo_type, x[got_both])
+        new_y = convert.(promo_type, y[got_both])
+        new_gradients = ismissing(gradients)        ? missing : convert.(promo_type, gradients[got_both])
+        converted_left  = ismissing(left_gradient)  ? missing : convert(promo_type, left_gradient)
+        converted_right = ismissing(right_gradient) ? missing : convert(promo_type, right_gradient)
+        new_left  = got_both[1]                     ? converted_left  : missing
+        new_right = got_both[length(got_both)]      ? converted_right : missing
+        if length(new_x) == 0 error("After removing missing elements there are no points left to estimate schumaker spline") end
+        return Schumaker(new_x , new_y; gradients = new_gradients , extrapolation = extrapolation, left_gradient = new_left, right_gradient = new_right)
     end
 end
 Base.broadcastable(e::Schumaker) = Ref(e)
