@@ -1,12 +1,12 @@
 import Plots.plot
 
 function plot(s1::Schumaker, interval::AbstractArray{R,1} = [s1.IntStarts_[1], 2*s1.IntStarts_[length(s1.IntStarts_)] - s1.IntStarts_[length(s1.IntStarts_)-1]]; # This default plots over the IntStarts.
-              derivs::Bool = true, grid_len::Integer = 20, plot_options::NamedTuple = (label = "Spline",), deriv_plot_options::NamedTuple = (label = "Spline - 1st deriv",), deriv2_plot_options::NamedTuple = (label = "Spline - 2nd deriv",), plt = missing) where R<:Real
+              derivs::Bool = false, grid_len::Integer = 20, plot_options::NamedTuple = (label = "Spline",), deriv_plot_options::NamedTuple = (label = "Spline - 1st deriv",), deriv2_plot_options::NamedTuple = (label = "Spline - 2nd deriv",), plt = missing) where R<:Real
     if length(interval) != 2 error("The interval parameter must have two entries for the start and endpoint of the segment.") end
         interval_as_tuple = Tuple{R,R}([interval[1], interval[2]])
     return plot(s1,interval_as_tuple; derivs = derivs, grid_len = grid_len, plot_options = plot_options, deriv_plot_options = deriv_plot_options, deriv2_plot_options = deriv2_plot_options, plt = plt)
 end
-function plot(s1::Schumaker, interval::Tuple{R,R}; derivs::Bool = true, grid_len::Integer = 20, plot_options::NamedTuple = (label = "Spline",), deriv_plot_options::NamedTuple = (label = "Spline - 1st deriv",),
+function plot(s1::Schumaker, interval::Tuple{R,R}; derivs::Bool = false, grid_len::Integer = 20, plot_options::NamedTuple = (label = "Spline",), deriv_plot_options::NamedTuple = (label = "Spline - 1st deriv",),
               deriv2_plot_options::NamedTuple = (label = "Spline - 2nd deriv",), plt = missing) where R<:Real
     grid = collect(range(interval[1], interval[2], length=grid_len))
     evals = evaluate.(s1,grid, 0)

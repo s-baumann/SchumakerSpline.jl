@@ -1,7 +1,7 @@
 using SchumakerSpline
 x = collect(0.0:0.01:2.0)
 y = sqrt.(x)
-s1 = Schumaker(x, y)
+s1 = Schumaker{Float64}(x, y)
 
 # This should plot something over [0,2]
 plt = plot(s1)

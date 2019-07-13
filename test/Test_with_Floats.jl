@@ -53,8 +53,10 @@ gaps[1] < tol
 gaps[length(gaps)] < tol
 minimum(gaps[2:(length(gaps)-1)]) > 10* tol
 
-
-
+# Testing the other syntax for evaluation.
+abs(spline(1.4) - evaluate(spline, 1.4)) < eps()
+abs(spline(1.5) - evaluate(spline, 1.5)) < eps()
+abs(spline(1.6) - evaluate(spline, 1.6)) < eps()
 
 #=
 # should be two random roots and one optima.
