@@ -10,8 +10,7 @@ function plot(s1::Schumaker, interval::Tuple{R,R}; derivs::Bool = false, grid_le
               deriv2_plot_options::NamedTuple = (label = "Spline - 2nd deriv",), plt = missing) where R<:Real
     grid = collect(range(interval[1], interval[2], length=grid_len))
     evals = evaluate.(s1,grid, 0)
-    plt = ismissing(plt) ? plot() : plt
-    plt = plot!(plt, grid, evals; plot_options...)
+    plt = ismissing(plt) ? plot(grid, evals; plot_options...) : plot!(plt, grid, evals; plot_options...)
     if derivs
         evals_1 = evaluate.(s1,grid, 1)
         plt = plot!(plt, grid, evals_1; deriv_plot_options...)
