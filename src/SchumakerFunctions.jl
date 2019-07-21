@@ -30,8 +30,8 @@ Creates a Schumaker spline.
 struct Schumaker{T<:Real}
     IntStarts_::Array{T,1}
     coefficient_matrix_::Array{T,2}
-    function Schumaker(x::Array{T,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-                       left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing) where T<:Real
+    function Schumaker(x::Array{T,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing,
+                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real
         if length(x) == 0
             error("Zero length x vector is insufficient to create Schumaker Spline.")
         elseif length(x) == 1
@@ -47,10 +47,10 @@ struct Schumaker{T<:Real}
             SpCoefs = [0 linear_coefficient y[1]]
             # In this case it defaults to curve extrapolation (which is same as linear here)
             # So we just alter in case constant is specified.
-            if extrapolation == Constant
-                matrix_without_extrapolation = hcat(IntStarts, IntEnds, SpCoefs)
-                matrix_with_extrapolation    = extrapolate(matrix_without_extrapolation, extrapolation, x, y)
-                return new{T}(matrix_with_extrapolation[:,1], matrix_with_extrapolation[:,3:5])
+            if extrapolation[1] == Constant || extrapolation[2] == Constant
+                matrix_without_extrapolation = hcat(IntStarts , SpCoefs)
+                matrix_with_extrapolation    = extrapolate(matrix_without_extrapolation, extrapolation, x[2], y)
+                return new{T}(matrix_with_extrapolation[:,1], matrix_with_extrapolation[:,2:4])
             else
                 return new{T}(IntStarts, SpCoefs)
             end
@@ -64,7 +64,7 @@ struct Schumaker{T<:Real}
         if !ismissing(right_gradient)
             gradients[length(gradients)] = right_gradient
         end
-        IntStarts, _, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
+        IntStarts, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
         return new{T}(IntStarts, SpCoefs)
      end
     function Schumaker(IntStarts_::Array{T,1}, coefficient_matrix_::Array{T,2}) where {T<:Real}
@@ -73,13 +73,13 @@ struct Schumaker{T<:Real}
     function Schumaker{Q}(IntStarts_::Array{<:Real,1}, coefficient_matrix_::Array{<:Real,2}) where Q<:Real
         return new{Q}(Q.(IntStarts_), Q.(coefficient_matrix_))
     end
-    function Schumaker(x::Array{Date,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-        left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing)
+    function Schumaker(x::Array{Date,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing,
+                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve))
         days_as_ints = Dates.days.(x)
         return Schumaker(days_as_ints , y; gradients = gradients , extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
     end
-    function Schumaker(x::Union{Array{T,1},Array{Union{Missing,T},1}},y::Union{Array{R,1},Array{Union{Missing,R},1}} ; gradients::Union{Missing,Array{<:Real,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-                       left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing) where T<:Real where R<:Real
+    function Schumaker(x::Union{Array{T,1},Array{Union{Missing,T},1}},y::Union{Array{R,1},Array{Union{Missing,R},1}} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
+                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real where R<:Real
         got_both = (!).(ismissing.(x) .| ismissing.(y))
         promo_type = promote_type(R,T)
         new_x = convert.(promo_type, x[got_both])
@@ -92,8 +92,8 @@ struct Schumaker{T<:Real}
         if length(new_x) == 0 error("After removing missing elements there are no points left to estimate schumaker spline") end
         return Schumaker(new_x , new_y; gradients = new_gradients , extrapolation = extrapolation, left_gradient = new_left, right_gradient = new_right)
     end
-    function Schumaker{Q}(x::AbstractArray, y::AbstractArray ; gradients::Union{Missing,AbstractArray} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
-                       left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing) where Q<:Real
+    function Schumaker{Q}(x::AbstractArray, y::AbstractArray ; gradients::Union{Missing,AbstractArray} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
+                          extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where Q<:Real
         got_both = (!).(ismissing.(x) .| ismissing.(y))
         new_x = convert.(Q, x[got_both])
         new_y = convert.(Q, y[got_both])
@@ -105,8 +105,8 @@ struct Schumaker{T<:Real}
         if length(new_x) == 0 error("After removing missing elements there are no points left to estimate schumaker spline") end
         return Schumaker(new_x , new_y; gradients = new_gradients , extrapolation = extrapolation, left_gradient = new_left, right_gradient = new_right)
     end
-    function Schumaker(x::Union{AbstractArray{T,1},AbstractArray{Union{Missing,T},1}},y::Union{AbstractArray{R,1},AbstractArray{Union{Missing,R},1}} ; gradients::Union{Missing,AbstractArray{<:Real,1}} = missing,
-                       extrapolation::Schumaker_ExtrapolationSchemes = Curve, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing) where T<:Real where R<:Real
+    function Schumaker(x::Union{AbstractArray{T,1},AbstractArray{Union{Missing,T},1}},y::Union{AbstractArray{R,1},AbstractArray{Union{Missing,R},1}} ; gradients::Union{Missing,AbstractArray{<:Real,1}} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
+                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real where R<:Real
        promo_type = promote_type(T,R)
        return Schumaker{promo_type}(x, y; gradients = gradients, extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
    end
@@ -147,9 +147,10 @@ function evaluate(spline::Schumaker, PointToExamine::Date,  derivative::Int = 0)
     days_as_int = Dates.days.(PointToExamine)
     return evaluate(spline,days_as_int,  derivative)
 end
-function (s::Schumaker)(x)
-    return evaluate(s, x)
+function (s::Schumaker)(x::Union{Real,Date}, deriv::Integer = 0)
+    return evaluate(s, x, deriv)
 end
+
 
 """
 Estimates the integral of the spline between lhs and rhs. These end points can be input
@@ -214,7 +215,7 @@ end
     imputeGradients(x::Array{T,1}, y::Array{T,1})
 Imputes gradients based on a vector of x and y coordinates.
 """
-function imputeGradients(x::Array{T,1}, y::Array{T,1}) where T<:Real
+function imputeGradients(x::Array{<:Real,1}, y::Array{<:Real,1})
      n = length(x)
      # Judd (1998), page 233, second last equation
      L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
@@ -275,11 +276,11 @@ function schumakerIndInterval(s::Array{T,1}, z::Array{T,1}, Smallt::Array{T,1}) 
    end
    Machine4Epsilon = 4*eps()
      if (tsi  <  Smallt[1] + Machine4Epsilon )
-         return [Smallt[1] Smallt[2] Coeffs2]
+         return [Smallt[1] Coeffs2]
      elseif (tsi + Machine4Epsilon > Smallt[2] )
-         return [Smallt[1] Smallt[2] Coeffs1]
+         return [Smallt[1]  Coeffs1]
      else
-         return [Smallt[1] tsi Coeffs1 ; tsi Smallt[2] Coeffs2]
+         return [Smallt[1] Coeffs1 ; tsi Coeffs2]
      end
  end
 
@@ -296,7 +297,8 @@ function schumakerIndInterval(s::Array{T,1}, z::Array{T,1}, Smallt::Array{T,1}) 
  * A vector of interval ends
  * A matrix of all coefficients
   """
- function getCoefficientMatrix(x::Array{T,1}, y::Array{T,1}, gradients::Array{T,1}, extrapolation::Schumaker_ExtrapolationSchemes) where T<:Real
+ function getCoefficientMatrix(x::Array{<:Real,1}, y::Array{<:Real,1}, gradients::Array{<:Real,1},
+                               extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes})
    n = length(x)
    fullMatrix = schumakerIndInterval([gradients[1], gradients[2]], [y[1], y[2]], [x[1], x[2]] )
     for intrval = 2:(n-1)
@@ -306,46 +308,61 @@ function schumakerIndInterval(s::Array{T,1}, z::Array{T,1}, Smallt::Array{T,1}) 
       intMatrix = schumakerIndInterval(z,s,Smallt)
       fullMatrix = vcat(fullMatrix,intMatrix)
     end
-    fullMatrix = extrapolate(fullMatrix, extrapolation, x, y)
-   return fullMatrix[:,1], fullMatrix[:,2], fullMatrix[:,3:5]
+    fullMatrix = extrapolate(fullMatrix, extrapolation, x[n], y)
+   return fullMatrix[:,1], fullMatrix[:,2:4]
  end
 
 """
  Adds a row on top and bottom of coefficient matrix to give out of sample prediction.
 ### Takes
  * fullMatrix - output from GetCoefficientMatrix first few lines
- * extrapolation - A string in ("Curve", "Linear", "Constant") that gives behaviour outside of interpolation range.
+ * extrapolation - A tuple with two enums in (Curve, Linear, Constant) that gives behaviour outside of interpolation range.
  * x - A vector of x coordinates
  * y - A vector of y coordinates
 
 ### Returns
   * A new version of fullMatrix with out of sample prediction built into it.
 """
-function extrapolate(fullMatrix::Array{T,2}, extrapolation::Schumaker_ExtrapolationSchemes, x::Array{T,1}, y::Array{T,1}) where T<:Real
-  if extrapolation == Curve
+function extrapolate(fullMatrix::Array{T,2}, extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes}, Topx::Real, y::Array{T,1}) where T<:Real
+  if (extrapolation[1] == Curve) && (extrapolation[2] == Curve)
     return fullMatrix
   end
+  # Preliminaries used throughout
   dim = size(fullMatrix)[1]
   Botx   = fullMatrix[1,1]
   Boty   = y[1]
-  if extrapolation == Linear
-    BotB = fullMatrix[1 , 4]
+  Topy = y[length(y)]
+  # Initialising variable so their domain is not restricted to the if statement spaces.
+  BotB = 0.0
+  BotC = 0.0
+  TopA = 0.0
+  TopB = 0.0
+  TopC = 0.0
+  # Now creating the extrapolation to the left.
+  if extrapolation[1] == Linear
+    BotB = fullMatrix[1 , 3]
     BotC   = Boty - BotB
-  else
+  elseif extrapolation[1] == Constant
     BotB = 0.0
     BotC = Boty
-  end
-  BotRow = [ Botx-1, Botx, 0.0, BotB, BotC]
-  Topx = fullMatrix[dim,2]
-  Topy = y[length(y)]
-  if extrapolation == Linear
-    TopB = fullMatrix[dim ,4]
+  end # Note for the curve case we will simply not append the new block.
+  BotRow = [Botx-1e-10, 0.0, BotB, BotC]
+  # Now doing the extrapolation to the right.
+  if extrapolation[2] == Linear
+    TopB = fullMatrix[dim ,3]
     TopC = Topy
-  else
+  elseif extrapolation[2] == Constant
     TopB = 0.0
     TopC = Topy
+  elseif extrapolation[2] == Curve # We are just going to add this one on regardless as otherwise end of data interval information is lost.
+    Gap  =  Topx - fullMatrix[dim ,1]
+    TopA = fullMatrix[dim ,2]
+    TopB = fullMatrix[dim ,3] + 2 * TopA * Gap
+    TopC = fullMatrix[dim ,4] + TopB * Gap - TopA * Gap*Gap
   end
-  TopRow = [ Topx, Topx + 1, 0.0 ,TopB ,TopC]
-  fullMatrix = vcat(BotRow' , fullMatrix,  TopRow')
+  TopRow = [ Topx, TopA ,TopB ,TopC]
+  # Appending blocks and returning.
+  if extrapolation[1] != Curve fullMatrix = vcat(BotRow' , fullMatrix) end
+  fullMatrix = vcat(fullMatrix,  TopRow')
   return fullMatrix
 end
