@@ -347,6 +347,7 @@ function extrapolate(fullMatrix::Array{T,2}, extrapolation::Tuple{Schumaker_Extr
     BotC = Boty
   end # Note for the curve case we will simply not append the new block.
   BotRow = [Botx-1e-10, 0.0, BotB, BotC]
+
   # Now doing the extrapolation to the right.
   if extrapolation[2] == Linear
     TopB = fullMatrix[dim ,3]

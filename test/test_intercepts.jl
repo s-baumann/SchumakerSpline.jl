@@ -50,7 +50,7 @@ abs(evaluate(spline, fourfinder.roots[1]) - 4.0) < 1e-10
 negfourfinder = find_roots(spline; root_value = -4.0)
 length(negfourfinder.roots) == 0
 fourfinder2 = find_roots(spline - 2.0; root_value = 2.0)
-abs(fourfinder[:roots][1] - fourfinder2[:roots][1]) < tol
+abs(fourfinder[:roots][1] - fourfinder2[:roots][1]) < eps()
 
 
 # This has a root but no optima:

@@ -4,40 +4,38 @@ find_root(spline::Schumaker; root_value::T = 0.0)
     Here root_value can be set to get all points at which the function is equal to the root value. For instance if you want to find all points at which
     the spline has a value of 1.0.
 """
-function find_roots(spline::Schumaker{T}; root_value::Real = 0.0) where T<:Real
+function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tuple{<:Real,<:Real} = (spline.IntStarts_[1], spline.IntStarts_[length(spline.IntStarts_)])) where T<:Real
     roots = Array{T,1}(undef,0)
     first_derivatives = Array{T,1}(undef,0)
     second_derivatives = Array{T,1}(undef,0)
+    first_interval = searchsortedlast(spline.IntStarts_, interval[1])
+    last_interval  = searchsortedlast(spline.IntStarts_, interval[2])
     len = length(spline.IntStarts_)
     constants = spline.coefficient_matrix_[:,3]
-    if len < 2
-        return (roots = roots, first_derivatives = first_derivatives, second_derivatives = second_derivatives)
-    else
-        for i in 1:(len-1)
-            if abs(sign(constants[i] - root_value) - sign(constants[i+1] - root_value)) > 0.5
-                a = spline.coefficient_matrix_[i,1]
-                b = spline.coefficient_matrix_[i,2]
-                c = spline.coefficient_matrix_[i,3] - root_value
-                if abs(a) > 1e-13 # Is it quadratic
-                    det = sqrt(b^2 - 4*a*c)
-                    left_root  = (-b + det) / (2*a) # The x coordinate here is relative to spline.IntStarts_[i]. We want the smallest one that is to the right (ie positive)
-                    right_root = (-b - det) / (2*a)
-                    if (left_root > 1e-15) && (left_root < spline.IntStarts_[i+1] - spline.IntStarts_[i] +  1e-15)
-                        append!(roots, left_root + spline.IntStarts_[i])
-                        append!(first_derivatives, 2 * a * left_root + b)
-                        append!(second_derivatives, 2 * a)
-                    elseif (right_root > 1e-15) && (right_root < spline.IntStarts_[i+1] - spline.IntStarts_[i] +  1e-15)
-                        append!(roots, right_root + spline.IntStarts_[i])
-                        append!(first_derivatives, 2 * a * right_root + b)
-                        append!(second_derivatives, 2 * a)
-                    end
-                else # Is it linear? Note it cannot be constant or else it could not have jumped past zero in the interval.
-                    new_root = spline.IntStarts_[i] - c/b
-                    if !((length(roots) > 0) && (abs(new_root - last(roots)) < 1e-5))
-                        append!(roots, spline.IntStarts_[i] - c/b)
-                        append!(first_derivatives, b)
-                        append!(second_derivatives, 0.0)
-                    end
+    for i in first_interval:(last_interval-1)
+        if abs(sign(constants[i] - root_value) - sign(constants[i+1] - root_value)) > 0.5
+            a = spline.coefficient_matrix_[i,1]
+            b = spline.coefficient_matrix_[i,2]
+            c = spline.coefficient_matrix_[i,3] - root_value
+            if abs(a) > 1e-13 # Is it quadratic
+                det = sqrt(b^2 - 4*a*c)
+                left_root  = (-b + det) / (2*a) # The x coordinate here is relative to spline.IntStarts_[i]. We want the smallest one that is to the right (ie positive)
+                right_root = (-b - det) / (2*a)
+                if (left_root > 1e-15) && (left_root < spline.IntStarts_[i+1] - spline.IntStarts_[i] +  1e-15)
+                    append!(roots, left_root + spline.IntStarts_[i])
+                    append!(first_derivatives, 2 * a * left_root + b)
+                    append!(second_derivatives, 2 * a)
+                elseif (right_root > 1e-15) && (right_root < spline.IntStarts_[i+1] - spline.IntStarts_[i] +  1e-15)
+                    append!(roots, right_root + spline.IntStarts_[i])
+                    append!(first_derivatives, 2 * a * right_root + b)
+                    append!(second_derivatives, 2 * a)
+                end
+            else # Is it linear? Note it cannot be constant or else it could not have jumped past zero in the interval.
+                new_root = spline.IntStarts_[i] - c/b
+                if !((length(roots) > 0) && (abs(new_root - last(roots)) < 1e-5))
+                    append!(roots, spline.IntStarts_[i] - c/b)
+                    append!(first_derivatives, b)
+                    append!(second_derivatives, 0.0)
                 end
             end
         end
