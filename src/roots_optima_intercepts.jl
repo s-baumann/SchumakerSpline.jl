@@ -48,9 +48,9 @@ find_optima(spline::Schumaker)
 Finds optima - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find optima.
 
 """
-function find_optima(spline::Schumaker)
+function find_optima(spline::Schumaker; interval::Tuple{<:Real,<:Real} = (spline.IntStarts_[1], spline.IntStarts_[length(spline.IntStarts_)]))
     deriv_spline = find_derivative_spline(spline)
-    root_info = find_roots(deriv_spline)
+    root_info = find_roots(deriv_spline; interval = interval)
     optima = root_info.roots
     optima_types =  Array{Symbol,1}(undef,length(optima))
     for i in 1:length(optima)
