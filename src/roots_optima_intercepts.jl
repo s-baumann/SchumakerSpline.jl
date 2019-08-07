@@ -12,11 +12,21 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     last_interval  = searchsortedlast(spline.IntStarts_, interval[2])
     len = length(spline.IntStarts_)
     constants = spline.coefficient_matrix_[:,3]
+    constants_minus_root = constants .- root_value
     for i in first_interval:(last_interval-1)
-        if abs(sign(constants[i] - root_value) - sign(constants[i+1] - root_value)) > 0.5
+        if abs(constants_minus_root[i]) < eps()
             a = spline.coefficient_matrix_[i,1]
             b = spline.coefficient_matrix_[i,2]
-            c = spline.coefficient_matrix_[i,3] - root_value
+            root = constants_minus_root[i]
+            append!(roots, root)
+            append!(first_derivatives, 2 * a * root + b)
+            append!(second_derivatives, 2 * a)
+            continue # We don't need to do the next bit.
+        end
+        if abs(sign(constants_minus_root[i]) - sign(constants_minus_root[i+1])) > 0.5
+            a = spline.coefficient_matrix_[i,1]
+            b = spline.coefficient_matrix_[i,2]
+            c = constants_minus_root[i]
             if abs(a) > 1e-13 # Is it quadratic
                 det = sqrt(b^2 - 4*a*c)
                 left_root  = (-b + det) / (2*a) # The x coordinate here is relative to spline.IntStarts_[i]. We want the smallest one that is to the right (ie positive)
