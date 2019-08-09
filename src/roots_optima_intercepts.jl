@@ -8,12 +8,13 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     roots = Array{T,1}(undef,0)
     first_derivatives = Array{T,1}(undef,0)
     second_derivatives = Array{T,1}(undef,0)
-    first_interval = searchsortedlast(spline.IntStarts_, interval[1])
-    last_interval  = searchsortedlast(spline.IntStarts_, interval[2])
+    first_interval_start = searchsortedlast(spline.IntStarts_, interval[1])
+    last_interval_start  = searchsortedlast(spline.IntStarts_, interval[2])
     len = length(spline.IntStarts_)
+    go_until = last_interval_start < len ? last_interval_start : len-1
     constants = spline.coefficient_matrix_[:,3]
     constants_minus_root = constants .- root_value
-    for i in first_interval:(last_interval-1)
+    for i in first_interval_start:go_until
         if abs(constants_minus_root[i]) < eps()
             a = spline.coefficient_matrix_[i,1]
             b = spline.coefficient_matrix_[i,2]
