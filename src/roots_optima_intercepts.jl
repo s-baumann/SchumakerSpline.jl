@@ -18,13 +18,13 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         if abs(constants_minus_root[i]) < eps()
             a = spline.coefficient_matrix_[i,1]
             b = spline.coefficient_matrix_[i,2]
-            root = constants_minus_root[i]
+            root = spline.IntStarts_[i]
             append!(roots, root)
             append!(first_derivatives, 2 * a * root + b)
             append!(second_derivatives, 2 * a)
             continue # We don't need to do the next bit.
         end
-        if abs(sign(constants_minus_root[i]) - sign(constants_minus_root[i+1])) > 0.5
+        if abs(sign(constants_minus_root[i]) - sign(constants_minus_root[i+1])) > 1.5 # 1.5 because if we have exact equalities we dont want to consider them except in the above code block.
             a = spline.coefficient_matrix_[i,1]
             b = spline.coefficient_matrix_[i,2]
             c = constants_minus_root[i]
