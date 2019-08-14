@@ -130,7 +130,7 @@ function evaluate(spline::Schumaker, PointToExamine::T,  derivative::Integer = 0
     IntervalNum = searchsortedlast(spline.IntStarts_, PointToExamine)
     IntervalNum = max(IntervalNum, 1)
     xmt = PointToExamine - spline.IntStarts_[IntervalNum]
-    Coefs = spline.coefficient_matrix_[ IntervalNum , :]
+    Coefs = spline.coefficient_matrix_[IntervalNum,:]
     if derivative == 0
         return reshape(Coefs' * [xmt^2 xmt 1]', 1)[1]
     elseif derivative == 1

@@ -51,6 +51,32 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
             end
         end
     end
+    # Now adding on roots that occur after the end of the last interval.
+    end_of_last_interval = spline.IntStarts_[length(spline.IntStarts_)]
+    if interval[2] > end_of_last_interval
+        a = spline.coefficient_matrix_[len,1]
+        b = spline.coefficient_matrix_[len,2]
+        c = constants_minus_root[len]
+        if abs(a) > 1e-13 # Is it quadratic
+            root_determinant = sqrt(b^2 - 4*a*c)
+            end_roots = end_of_last_interval .+ [(-b - root_determinant)/(2*a), (-b + root_determinant)/(2*a)]
+            end_roots2 = end_roots[(end_roots .> end_of_last_interval) .& (end_roots .< interval[2])]
+            num_new_roots = length(end_roots2)
+            if num_new_roots > 0
+                append!(roots, end_roots2)
+                append!(first_derivatives, (2 * a) .* end_roots2 .+ b)
+                append!(second_derivatives, repeat([2*a], num_new_roots))
+            end
+        elseif abs(b) > 1e-13 # If it is linear.
+            new_root = [-c/b + end_of_last_interval]
+            new_root2 = new_root[(new_root .> end_of_last_interval) .& (new_root .< interval[2])]
+            if length(new_root2) > 0
+                append!(roots, new_root2)
+                append!(first_derivatives, (2 * a) .* new_root2 .+ b)
+                append!(second_derivatives, 2*a)
+            end
+        end # We do nothing in the case that we have a constant - no chance of root.
+    end
     return (roots = roots, first_derivatives = first_derivatives, second_derivatives = second_derivatives)
 end
 
@@ -134,7 +160,9 @@ function get_intersection_points(s1::Schumaker{T}, s2::Schumaker{R}) where T<:Re
         if one_greater != last_one_greater
             interval = Tuple([overlap_starts[i-1], overlap_starts[i]])
             crossover = get_crossover_in_interval(s1, s2, interval)
-            @assert length(crossover) == 1 "Only one crossover expected in interval from a continuous spline."
+            if length(crossover) != 1
+                error("Only one crossover expected in interval from a continuous spline.")
+            end
             push!(locations_of_crossovers, crossover[1])
         end
         last_one_greater = one_greater
