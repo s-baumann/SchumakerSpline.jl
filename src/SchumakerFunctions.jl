@@ -324,6 +324,7 @@ function schumakerIndInterval(s::Array{T,1}, z::Array{T,1}, Smallt::Array{T,1}) 
   * A new version of fullMatrix with out of sample prediction built into it.
 """
 function extrapolate(fullMatrix::Array{T,2}, extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes}, Topx::Real, y::Array{T,1}) where T<:Real
+    # In the fullMatrix the first column are the x values and then the next 3 columns are a, b, c in the expression a(x-start)^2 + b(x-start) + c
   if (extrapolation[1] == Curve) && (extrapolation[2] == Curve)
     return fullMatrix
   end
@@ -349,8 +350,12 @@ function extrapolate(fullMatrix::Array{T,2}, extrapolation::Tuple{Schumaker_Extr
   BotRow = [Botx-1e-10, 0.0, BotB, BotC]
 
   # Now doing the extrapolation to the right.
-  if extrapolation[2] == Linear
-    TopB = fullMatrix[dim ,3]
+  if extrapolation[2] == Linear # This is a bit more complicated than before because the
+                                # coefficients by themselves give the gradients at the left
+                                # of the interval. Here we want the gradient at the right.
+    last_interval_width = Topx - fullMatrix[dim , 1]
+    grad_at_right = 2 * fullMatrix[dim , 2] * last_interval_width + fullMatrix[dim , 3]
+    TopB = grad_at_right
     TopC = Topy
   elseif extrapolation[2] == Constant
     TopB = 0.0

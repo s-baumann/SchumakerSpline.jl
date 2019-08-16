@@ -14,3 +14,5 @@ plot(s2)
 
 s3 = Schumaker(x1,y1; extrapolation = (Constant, Linear))
 abs((s3(x1[40]+0.5) - s3(x1[40])) - (s3(x1[40]+1.5) - s3(x1[40]+1.0))) < 2e-14
+TopX = x1[40]
+abs(s3(TopX - 10*eps()) + s3(TopX - 10*eps(),1)*0.5 - s3(TopX +0.5) ) < 1000*eps()
