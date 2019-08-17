@@ -105,9 +105,9 @@ optima = find_roots(spline; interval = interval)
 length(optima.roots) == 1
 spline(optima.roots[1]) < 1e-10
 
+# This spline is NOT continuous. It jumps the root. And hence no root is found.
 spline = Schumaker{Float64}([-1.0e-10, 0.0, 0.02, 0.03, 0.0607165, 0.1, 0.207868, 0.3, 0.360524, 0.5, 0.584994, 0.75, 0.859153, 1.0, 1.06934, 1.5, 1.75, 2.0, 2.66667, 4.0],
                             [-0.0 0.0 11.2616; 113.819 -400.816 87.8368; 455.276 -1499.77 79.866; 98.1356 -338.854 64.9138; 60.0001 -210.615 54.598; 10.1658 -47.5069 46.4169; 13.9347 -57.0219 41.4107; 30.028 -103.46 36.2755; 5.6543 -26.5882 30.1237; 9.39851 -35.9132 26.5253; 2.49363 -14.6014 23.5408; 4.42393 -19.0774 21.1993; 2.65699 -13.3898                         19.1697;                     3.03898 -13.6262 17.3365; 0.0787707 -5.70898 16.4063; 0.989202 -7.68514 13.9623; -2.41678 -0.111457 12.1028; -0.132839 -5.68619 11.9239; -0.0332096 -6.00949 8.07405; -0.0 -6.05822 -0.023263])
 interval = (1e-14, 5.0)
-optima = find_roots(spline; interval = (1e-14, next_budget_if_nothing_spent))
-length(optima.roots) == 1
-spline(optima.roots[1]) < 1e-10
+optima = find_roots(spline; interval = interval)
+length(optima.roots) == 0
