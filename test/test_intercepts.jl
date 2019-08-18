@@ -97,13 +97,13 @@ spline = Schumaker{Float64}([0.0, 0.166667, 0.25, 0.277597, 0.5, 0.581563, 0.75,
 interval = (1e-14, 4.0)
 optima = find_roots(spline; interval = interval)
 length(optima.roots) == 1
-spline(optima.roots[1]) < 1e-10
+abs(spline(optima.roots[1])) < 1e-10
 # In this case the root is in the last interval which is linear rather than quadratic.
 spline = Schumaker{Float64}([-1.0e-10, 0.0, 0.02, 0.03, 0.0460546, 0.1, 0.170253, 0.3, 0.361175, 0.5, 0.598784, 0.75, 0.881918, 1.0, 1.27089, 1.5, 1.8286, 2.0, 2.66667, 4.0], [-0.0 0.0 1.74211; 66.2224 -229.519 34.2346; 264.889 -872.979 29.6707; 182.141 -599.117 20.9674; 16.1324 -56.256 11.3957; 6.4478 -23.5354 8.40789; 1.89036 -8.26419 6.78629; 4.79607 -16.6813 5.74585; 0.931297 -4.40443 4.74333; 1.12989 -4.72817 4.14983; 0.482179 -2.64836 3.69379; 0.577267 -2.76551 3.30434; 0.720484 -2.99668 2.94957; 0.162497 -1.37639 2.60576; 0.227166 -1.44474 2.24484; 0.162381 -1.19387 1.92576; 0.59688 -1.97635 1.55098; 0.0393714 -0.694514 1.22978; 0.00984285 -0.598087 0.784266; -0.0 -0.583443 0.0121747])
 interval = (1e-14, 5.0)
 optima = find_roots(spline; interval = interval)
 length(optima.roots) == 1
-spline(optima.roots[1]) < 1e-10
+abs(spline(optima.roots[1])) < 1e-10
 
 # This spline is NOT continuous. It jumps the root. And hence no root is found.
 spline = Schumaker{Float64}([-1.0e-10, 0.0, 0.02, 0.03, 0.0607165, 0.1, 0.207868, 0.3, 0.360524, 0.5, 0.584994, 0.75, 0.859153, 1.0, 1.06934, 1.5, 1.75, 2.0, 2.66667, 4.0],
@@ -111,3 +111,23 @@ spline = Schumaker{Float64}([-1.0e-10, 0.0, 0.02, 0.03, 0.0607165, 0.1, 0.207868
 interval = (1e-14, 5.0)
 optima = find_roots(spline; interval = interval)
 length(optima.roots) == 0
+
+# There was an issue with this spline not getting 3 roots as two of them are within one interval.
+spline = Schumaker{Float64}([-1.0e-10, 0.0, 0.0208333, 0.03125, 0.040147, 0.0625, 0.1023, 0.125, 0.203443, 0.25, 0.393202, 0.5, 0.740062, 1.0, 1.26141, 2.0, 3.0, 4.0, 5.33333, 8.0], [-0.0 0.0 4.79187; 63.3179 -152.462 47.9744; 253.272 -515.484 44.8255; 426.822 -843.087 39.4834; 67.6186 -148.651 32.0162; 22.7273 -60.4593 28.7272; 69.8655 -146.831 26.3569; 12.8026 -37.776 23.0599; 36.3453 -78.2209 20.1754; 8.38371 -25.2826 16.6125; 15.0731 -34.0978 13.1639; 5.82125 -16.024 9.69419; 4.96507 -11.9915 6.18291; 5.60305 -10.2219 3.40135; 0.701903 -1.91131 1.1121; 0.979196 -1.0424 0.0833198; -1.7432 0.749616 0.0201181; -0.283294 -1.67429 -0.973462; -0.0708235 -2.08624 -3.70948; -0.0 -2.22356 -9.77643])
+interval = (1e-14, 5.0)
+root_value = 0.0
+optima = find_roots(spline; root_value = root_value, interval = interval)
+length(optima.roots) == 3
+abs(spline(optima.roots[1])) < 1e-10
+abs(spline(optima.roots[2])) < 1e-10
+abs(spline(optima.roots[3])) < 1e-10
+# There was also a problem that it is getting roots outside of our interval of interest.
+interval = (1e-14, 3.0)
+root_value = 0.0
+optima = find_roots(spline; root_value = root_value, interval = interval)
+length(optima.roots) == 2
+# There was also a problem that it is getting roots outside of our interval of interest.
+interval = (1e-14, 2.9)
+root_value = 0.0
+optima = find_roots(spline; root_value = root_value, interval = interval)
+length(optima.roots) == 1

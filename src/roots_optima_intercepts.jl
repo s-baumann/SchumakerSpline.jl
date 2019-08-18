@@ -1,4 +1,21 @@
 """
+test_if_intercept_in_interval(a1::Real,b1::Real,c1::Real,c2::Real,interval_width::Real)
+    This tests if a spline could have passed over zero in a certain interval. The a1,b1,c1 are the coefficients of the spline. The two xs are for the left and right and c2 is the right hand level.
+        Note that this function will not detect zeros that are precisely on the endpoints.
+"""
+function test_if_intercept_in_interval(a1::Real,b1::Real,c1::Real,c2::Real,interval_width::Real)
+    if abs(sign(c1) - sign(c2)) > 1.5 return true end # If we cross the barrier then there is at least one intercept in interval.
+    if sign(b1) == sign(2*a1*(interval_width)+b1) return false end # If we did not cross the barrier and the spline is monotonic then we did not cross
+    # Now we have the case where the gradient switches sign within an interval but the sign of the endpoints did not change.
+    # The easiest way to test will be to find the vertex of the parabola. See if it is within the interval and of a different sign to the endpoints.
+    # We don't actually have to test if the vertex is in the interval however - it has to be for the gradient sign to have flipped.
+    vertex_x = -b1/(2*a1) # Note that this is relative to x1.
+    vertex_y = a1 * (vertex_x)^2 + b1*(vertex_x) + c1
+    is_vertex_of_opposite_sign_in_y = abs(sign(c1) - sign(vertex_y)) > 1.5
+    return is_vertex_of_opposite_sign_in_y
+end
+
+"""
 find_root(spline::Schumaker; root_value::T = 0.0)
     Finds roots - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find roots.
     Here root_value can be set to get all points at which the function is equal to the root value. For instance if you want to find all points at which
@@ -24,28 +41,32 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
             append!(second_derivatives, 2 * a)
             continue # We don't need to do the next bit.
         end
-        if abs(sign(constants_minus_root[i]) - sign(constants_minus_root[i+1])) > 1.5 # 1.5 because if we have exact equalities we dont want to consider them except in the above code block.
-            a = spline.coefficient_matrix_[i,1]
-            b = spline.coefficient_matrix_[i,2]
-            c = constants_minus_root[i]
-            if abs(a) > 1e-13 # Is it quadratic
-                det = sqrt(b^2 - 4*a*c)
-                left_root  = (-b + det) / (2*a) # The x coordinate here is relative to spline.IntStarts_[i]. We want the smallest one that is to the right (ie positive)
-                right_root = (-b - det) / (2*a)
-                if (left_root > 1e-15) && (left_root < spline.IntStarts_[i+1] - spline.IntStarts_[i] +  1e-15)
+        a1  = spline.coefficient_matrix_[i,1]
+        b1  = spline.coefficient_matrix_[i,2]
+        c1  = constants_minus_root[i]
+        c2 = constants_minus_root[i+1]
+        interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i]
+        if test_if_intercept_in_interval(a1,b1,c1,c2,interval_width)
+            if abs(a1) > 1e-13 # Is it quadratic
+                det = sqrt(b1^2 - 4*a1*c1)
+                both_roots = [(-b1 + det) / (2*a1), (-b1 - det) / (2*a1)] # The x coordinates here are relative to spline.IntStarts_[i].
+                left_root  = minimum(both_roots)
+                right_root = maximum(both_roots)
+                if (left_root > 1e-15) && (left_root < interval_width -  1e-15)
                     append!(roots, left_root + spline.IntStarts_[i])
-                    append!(first_derivatives, 2 * a * left_root + b)
-                    append!(second_derivatives, 2 * a)
-                elseif (right_root > 1e-15) && (right_root < spline.IntStarts_[i+1] - spline.IntStarts_[i] +  1e-15)
+                    append!(first_derivatives, 2 * a1 * left_root + b1)
+                    append!(second_derivatives, 2 * a1)
+                end
+                if (right_root > 1e-15) && (right_root < interval_width - 1e-15)
                     append!(roots, right_root + spline.IntStarts_[i])
-                    append!(first_derivatives, 2 * a * right_root + b)
-                    append!(second_derivatives, 2 * a)
+                    append!(first_derivatives, 2 * a1 * right_root + b1)
+                    append!(second_derivatives, 2 * a1)
                 end
             else # Is it linear? Note it cannot be constant or else it could not have jumped past zero in the interval.
-                new_root = spline.IntStarts_[i] - c/b
+                new_root = spline.IntStarts_[i] - c1/b1
                 if !((length(roots) > 0) && (abs(new_root - last(roots)) < 1e-5))
-                    append!(roots, spline.IntStarts_[i] - c/b)
-                    append!(first_derivatives, b)
+                    append!(roots, spline.IntStarts_[i] - c1/b1)
+                    append!(first_derivatives, b1)
                     append!(second_derivatives, 0.0)
                 end
             end
@@ -77,7 +98,14 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
             end
         end # We do nothing in the case that we have a constant - no chance of root.
     end
-    return (roots = roots, first_derivatives = first_derivatives, second_derivatives = second_derivatives)
+    # Sometimes if there are two roots within an interval and the endpoint of the interval is also here we get too many roots.
+    # So here we get rid of stuff we don't want.
+    if length(roots) == 0
+        return (roots = roots, first_derivatives = first_derivatives, second_derivatives = second_derivatives)
+    else
+        roots_in_interval = (roots .>= interval[1]) .& (roots .<= interval[2])
+        return (roots = roots[roots_in_interval], first_derivatives = first_derivatives[roots_in_interval], second_derivatives = second_derivatives[roots_in_interval])
+    end
 end
 
 """
