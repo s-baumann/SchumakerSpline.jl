@@ -4,14 +4,14 @@ test_if_intercept_in_interval(a1::Real,b1::Real,c1::Real,c2::Real,interval_width
         Note that this function will not detect zeros that are precisely on the endpoints.
 """
 function test_if_intercept_in_interval(a1::Real,b1::Real,c1::Real,c2::Real,interval_width::Real)
-    if abs(sign(c1) - sign(c2)) > 1.5 return true end # If we cross the barrier then there is at least one intercept in interval.
+    if (sign(c1) == 0) || abs(sign(c1) - sign(c2)) > 1.5 return true end # If we cross the barrier then there is at least one intercept in interval.
     if sign(b1) == sign(2*a1*(interval_width)+b1) return false end # If we did not cross the barrier and the spline is monotonic then we did not cross
     # Now we have the case where the gradient switches sign within an interval but the sign of the endpoints did not change.
     # The easiest way to test will be to find the vertex of the parabola. See if it is within the interval and of a different sign to the endpoints.
     # We don't actually have to test if the vertex is in the interval however - it has to be for the gradient sign to have flipped.
     vertex_x = -b1/(2*a1) # Note that this is relative to x1.
     vertex_y = a1 * (vertex_x)^2 + b1*(vertex_x) + c1
-    is_vertex_of_opposite_sign_in_y = abs(sign(c1) - sign(vertex_y)) > 1.5
+    is_vertex_of_opposite_sign_in_y = abs(sign(c1) - sign(vertex_y)) > 0.5
     return is_vertex_of_opposite_sign_in_y
 end
 
@@ -32,33 +32,34 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     constants = spline.coefficient_matrix_[:,3]
     constants_minus_root = constants .- root_value
     for i in first_interval_start:go_until
-        if abs(constants_minus_root[i]) < eps()
-            a = spline.coefficient_matrix_[i,1]
-            b = spline.coefficient_matrix_[i,2]
-            root = spline.IntStarts_[i]
-            append!(roots, root)
-            append!(first_derivatives, 2 * a * root + b)
-            append!(second_derivatives, 2 * a)
-            continue # We don't need to do the next bit.
-        end
+        #if abs(constants_minus_root[i]) <= eps()
+        #    a = spline.coefficient_matrix_[i,1]
+        #    b = spline.coefficient_matrix_[i,2]
+        #    root = spline.IntStarts_[i]
+        #    append!(roots, root)
+        #    append!(first_derivatives, 2 * a * root + b)
+        #    append!(second_derivatives, 2 * a)
+        #    continue # We don't need to do the next bit.
+        #end
         a1  = spline.coefficient_matrix_[i,1]
         b1  = spline.coefficient_matrix_[i,2]
         c1  = constants_minus_root[i]
         c2 = constants_minus_root[i+1]
         interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i]
+        width_minus_eps = interval_width -  eps()
         if test_if_intercept_in_interval(a1,b1,c1,c2,interval_width)
-            if abs(a1) > 1e-13 # Is it quadratic
+            if abs(a1) > eps() # Is it quadratic
                 det = sqrt(b1^2 - 4*a1*c1)
                 both_roots = [(-b1 + det) / (2*a1), (-b1 - det) / (2*a1)] # The x coordinates here are relative to spline.IntStarts_[i].
                 left_root  = minimum(both_roots)
                 right_root = maximum(both_roots)
-                if (left_root > 1e-15) && (left_root < interval_width -  1e-15)
-                    append!(roots, left_root + spline.IntStarts_[i])
+                if (left_root >= 0) && (left_root <= width_minus_eps)
+                    append!(roots, spline.IntStarts_[i] + left_root)
                     append!(first_derivatives, 2 * a1 * left_root + b1)
                     append!(second_derivatives, 2 * a1)
                 end
-                if (right_root > 1e-15) && (right_root < interval_width - 1e-15)
-                    append!(roots, right_root + spline.IntStarts_[i])
+                if (right_root >= 0) && (right_root <= width_minus_eps)
+                    append!(roots, spline.IntStarts_[i] + right_root)
                     append!(first_derivatives, 2 * a1 * right_root + b1)
                     append!(second_derivatives, 2 * a1)
                 end
@@ -74,23 +75,23 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     end
     # Now adding on roots that occur after the end of the last interval.
     end_of_last_interval = spline.IntStarts_[length(spline.IntStarts_)]
-    if interval[2] > end_of_last_interval
+    if interval[2] >= end_of_last_interval
         a = spline.coefficient_matrix_[len,1]
         b = spline.coefficient_matrix_[len,2]
         c = constants_minus_root[len]
-        if abs(a) > 1e-13 # Is it quadratic
+        if abs(a) > eps() # Is it quadratic
             root_determinant = sqrt(b^2 - 4*a*c)
             end_roots = end_of_last_interval .+ [(-b - root_determinant)/(2*a), (-b + root_determinant)/(2*a)]
-            end_roots2 = end_roots[(end_roots .> end_of_last_interval) .& (end_roots .< interval[2])]
+            end_roots2 = end_roots[(end_roots .>= end_of_last_interval) .& (end_roots .<= interval[2])]
             num_new_roots = length(end_roots2)
             if num_new_roots > 0
                 append!(roots, end_roots2)
                 append!(first_derivatives, (2 * a) .* end_roots2 .+ b)
                 append!(second_derivatives, repeat([2*a], num_new_roots))
             end
-        elseif abs(b) > 1e-13 # If it is linear.
+        elseif abs(b) > eps() # If it is linear.
             new_root = [-c/b + end_of_last_interval]
-            new_root2 = new_root[(new_root .> end_of_last_interval) .& (new_root .< interval[2])]
+            new_root2 = new_root[(new_root .>= end_of_last_interval) .& (new_root .<= interval[2])]
             if length(new_root2) > 0
                 append!(roots, new_root2)
                 append!(first_derivatives, (2 * a) .* new_root2 .+ b)
