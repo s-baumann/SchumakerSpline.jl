@@ -32,33 +32,24 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     constants = spline.coefficient_matrix_[:,3]
     constants_minus_root = constants .- root_value
     for i in first_interval_start:go_until
-        #if abs(constants_minus_root[i]) <= eps()
-        #    a = spline.coefficient_matrix_[i,1]
-        #    b = spline.coefficient_matrix_[i,2]
-        #    root = spline.IntStarts_[i]
-        #    append!(roots, root)
-        #    append!(first_derivatives, 2 * a * root + b)
-        #    append!(second_derivatives, 2 * a)
-        #    continue # We don't need to do the next bit.
-        #end
         a1  = spline.coefficient_matrix_[i,1]
         b1  = spline.coefficient_matrix_[i,2]
         c1  = constants_minus_root[i]
         c2 = constants_minus_root[i+1]
         interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i]
-        width_minus_eps = interval_width -  eps()
         if test_if_intercept_in_interval(a1,b1,c1,c2,interval_width)
             if abs(a1) > eps() # Is it quadratic
                 det = sqrt(b1^2 - 4*a1*c1)
                 both_roots = [(-b1 + det) / (2*a1), (-b1 - det) / (2*a1)] # The x coordinates here are relative to spline.IntStarts_[i].
                 left_root  = minimum(both_roots)
                 right_root = maximum(both_roots)
-                if (left_root >= 0) && (left_root <= width_minus_eps)
+                # This means that the endpoints are double counted. Thus we will have to remove them later.
+                if (left_root >= 0) && (left_root <= interval_width + 5*eps())
                     append!(roots, spline.IntStarts_[i] + left_root)
                     append!(first_derivatives, 2 * a1 * left_root + b1)
                     append!(second_derivatives, 2 * a1)
                 end
-                if (right_root >= 0) && (right_root <= width_minus_eps)
+                if (right_root >= 0) && (right_root <= interval_width)
                     append!(roots, spline.IntStarts_[i] + right_root)
                     append!(first_derivatives, 2 * a1 * right_root + b1)
                     append!(second_derivatives, 2 * a1)
@@ -105,6 +96,12 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         return (roots = roots, first_derivatives = first_derivatives, second_derivatives = second_derivatives)
     else
         roots_in_interval = (roots .>= interval[1]) .& (roots .<= interval[2])
+        if length(roots) > 1
+           gaps = roots_in_interval[2:length(roots)] = roots_in_interval[1:(length(roots)-1)]
+           for i in 1:length(gaps)
+               if abs(gaps[i]) < 5 * eps() roots_in_interval[i+1] = false end
+           end
+        end
         return (roots = roots[roots_in_interval], first_derivatives = first_derivatives[roots_in_interval], second_derivatives = second_derivatives[roots_in_interval])
     end
 end
