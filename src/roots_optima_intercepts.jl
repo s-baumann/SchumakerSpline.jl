@@ -28,10 +28,11 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     first_interval_start = searchsortedlast(spline.IntStarts_, interval[1])
     last_interval_start  = searchsortedlast(spline.IntStarts_, interval[2])
     len = length(spline.IntStarts_)
+    go_from = max(1,first_interval_start)
     go_until = last_interval_start < len ? last_interval_start : len-1
     constants = spline.coefficient_matrix_[:,3]
     constants_minus_root = constants .- root_value
-    for i in first_interval_start:go_until
+    for i in go_from:go_until
         a1  = spline.coefficient_matrix_[i,1]
         b1  = spline.coefficient_matrix_[i,2]
         c1  = constants_minus_root[i]
@@ -97,7 +98,7 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
     else
         roots_in_interval = (roots .>= interval[1]) .& (roots .<= interval[2])
         if length(roots) > 1
-           gaps = roots_in_interval[2:length(roots)] = roots_in_interval[1:(length(roots)-1)]
+           gaps = roots[2:length(roots)] .- roots[1:(length(roots)-1)]
            for i in 1:length(gaps)
                if abs(gaps[i]) < 5 * eps() roots_in_interval[i+1] = false end
            end

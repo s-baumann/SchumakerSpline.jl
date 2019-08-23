@@ -131,3 +131,10 @@ interval = (1e-14, 2.9)
 root_value = 0.0
 optima = find_roots(spline; root_value = root_value, interval = interval)
 length(optima.roots) == 1
+
+x = [1,2,3]
+y = [3,5,6]
+spline = Schumaker(x,y, ; extrapolation = (Constant,Linear))
+interval = (1e-14, Inf)
+root_value = 6
+optima = find_roots(spline; root_value = 5, interval = interval)
