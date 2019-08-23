@@ -27,11 +27,12 @@ Creates a Schumaker spline.
 ### Returns
 * A Schumaker object which details the spline. This object can then be evaluated with evaluate or evaluate_integral.
  """
-struct Schumaker{T<:Real}
+struct Schumaker{T<:AbstractFloat}
     IntStarts_::Array{T,1}
     coefficient_matrix_::Array{T,2}
-    function Schumaker(x::Array{T,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing,
-                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real
+    function Schumaker(x::Array{<:Real,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing,
+                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve))
+        T = typeof(AbstractFloat(0.0)) # TODO This is pretty dodgy. Try to not have to do this.
         if length(x) == 0
             error("Zero length x vector is insufficient to create Schumaker Spline.")
         elseif length(x) == 1
@@ -240,7 +241,7 @@ Splits an interval into 2 subintervals and creates the quadratic coefficients
 ### Returns
  * A 2 x 5 matrix. The first column is the x values of start of the two subintervals. The second column is the ends. The last 3 columns are quadratic coefficients in two subintervals.
 """
-function schumakerIndInterval(s::Array{T,1}, z::Array{T,1}, Smallt::Array{T,1}) where T<:Real
+function schumakerIndInterval(s::Array{<:Real,1}, z::Array{<:Real,1}, Smallt::Array{<:Real,1}) where T<:Real
    # The SchumakerIndInterval function takes in each interval individually
    # and returns the location of the knot as well as the quadratic coefficients in each subinterval.
 
@@ -323,7 +324,7 @@ function schumakerIndInterval(s::Array{T,1}, z::Array{T,1}, Smallt::Array{T,1}) 
 ### Returns
   * A new version of fullMatrix with out of sample prediction built into it.
 """
-function extrapolate(fullMatrix::Array{T,2}, extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes}, Topx::Real, y::Array{T,1}) where T<:Real
+function extrapolate(fullMatrix::Array{<:Real,2}, extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes}, Topx::Real, y::Array{<:Real,1})
     # In the fullMatrix the first column are the x values and then the next 3 columns are a, b, c in the expression a(x-start)^2 + b(x-start) + c
   if (extrapolation[1] == Curve) && (extrapolation[2] == Curve)
     return fullMatrix
