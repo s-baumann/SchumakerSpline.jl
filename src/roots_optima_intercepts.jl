@@ -102,7 +102,7 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         if length(roots) > 1
            gaps = roots[2:length(roots)] .- roots[1:(length(roots)-1)]
            for i in 1:length(gaps)
-               if abs(gaps[i]) < 5 * eps() roots_in_interval[i+1] = false end
+               if abs(gaps[i]) < 100 * eps() roots_in_interval[i+1] = false end
            end
         end
         return (roots = roots[roots_in_interval], first_derivatives = first_derivatives[roots_in_interval], second_derivatives = second_derivatives[roots_in_interval])
