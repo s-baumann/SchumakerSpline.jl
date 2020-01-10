@@ -178,7 +178,9 @@ function evaluate_integral(spline::Schumaker, lhs::Real, rhs::Real)
         interior_areas = 0.0
         first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
         for i in 1:(number_of_intervals-1)
-            interior_areas = interior_areas + section_integral(spline ,  spline.IntStarts_[first_interval + i] , spline.IntStarts_[first_interval + i+1] )
+            sec_int =  section_integral(spline ,  spline.IntStarts_[first_interval + i] , spline.IntStarts_[first_interval + i+1] )
+            if isnan(sec_int) error(string("Bug at ", i)) end
+            interior_areas = interior_areas + sec_int
         end
         last  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
         return first + interior_areas + last
@@ -234,54 +236,54 @@ function imputeGradients(x::Array{<:Real,1}, y::Array{<:Real,1})
 """
 Splits an interval into 2 subintervals and creates the quadratic coefficients
 ### Takes
- * s - A 2 entry vector with gradients at either end of the interval
- * z - A 2 entry vector with y values at either end of the interval
- * Smallt - A 2 entry vector with x values at either end of the interval
+ * gradients - A 2 entry vector with gradients at either end of the interval
+ * y - A 2 entry vector with y values at either end of the interval
+ * x - A 2 entry vector with x values at either end of the interval
 
 ### Returns
- * A 2 x 5 matrix. The first column is the x values of start of the two subintervals. The second column is the ends. The last 3 columns are quadratic coefficients in two subintervals.
+ * A 2 x 4 matrix. The first column is the x values of start of the two subintervals. The last 3 columns are quadratic coefficients in two subintervals.
 """
-function schumakerIndInterval(s::Array{<:Real,1}, z::Array{<:Real,1}, Smallt::Array{<:Real,1}) where T<:Real
+function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x::Array{<:Real,1}) where T<:Real
    # The SchumakerIndInterval function takes in each interval individually
    # and returns the location of the knot as well as the quadratic coefficients in each subinterval.
 
    # Judd (1998), page 232, Lemma 6.11.1 provides this if condition:
-   if (sum(s)*(Smallt[2]-Smallt[1]) == 2*(z[2]-z[1]))
-     tsi = Smallt[2]
+   if (sum(gradients)*(x[2]-x[1]) == 2*(y[2]-y[1]))
+     tsi = x[2]
    else
      # Judd (1998), page 233, Algorithm 6.3 along with equations 6.11.4 and 6.11.5 provide this whole section
-     delta = (z[2] -z[1])/(Smallt[2]-Smallt[1])
-     Condition = ((s[1]-delta)*(s[2]-delta) >= 0)
-     Condition2 = abs(s[2]-delta) < abs(s[1]-delta)
+     delta = (y[2] -y[1])/(x[2]-x[1])
+     Condition = ((gradients[1]-delta)*(gradients[2]-delta) >= 0)
+     Condition2 = abs(gradients[2]-delta) < abs(gradients[1]-delta)
      if (Condition)
-       tsi = sum(Smallt)/2
+       tsi = sum(x)/2
      elseif (Condition2)
-       tsi = (Smallt[1] + (Smallt[2]-Smallt[1])*(s[2]-delta)/(s[2]-s[1]))
+       tsi = (x[1] + (x[2]-x[1])*(gradients[2]-delta)/(gradients[2]-gradients[1]))
      else
-       tsi = (Smallt[2] + (Smallt[2]-Smallt[1])*(s[1]-delta)/(s[2]-s[1]))
+       tsi = (x[2] + (x[2]-x[1])*(gradients[1]-delta)/(gradients[2]-gradients[1]))
      end
    end
 
    # Judd (1998), page 232, 3rd last equation of page.
-   alpha = tsi-Smallt[1]
-   beta = Smallt[2]-tsi
+   alpha = tsi-x[1]
+   beta = x[2]-tsi
    # Judd (1998), page 232, 4th last equation of page.
-   sbar = (2*(z[2]-z[1])-(alpha*s[1]+beta*s[2]))/(Smallt[2]-Smallt[1])
+   sbar = (2*(y[2]-y[1])-(alpha*gradients[1]+beta*gradients[2]))/(x[2]-x[1])
    # Judd (1998), page 232, 3rd equation of page. (C1, B1, A1)
-   Coeffs1 = [ (sbar-s[1])/(2*alpha)  s[1]  z[1] ]
+   Coeffs1 = [ (sbar-gradients[1])/(2*alpha)  gradients[1]  y[1] ]
    if (beta == 0)
      Coeffs2 = Coeffs1
    else
      # Judd (1998), page 232, 4th equation of page. (C2, B2, A2)
-     Coeffs2 = [ (s[2]-sbar)/(2*beta)  sbar  Coeffs1 * [alpha^2, alpha, 1] ]
+     Coeffs2 = [ (gradients[2]-sbar)/(2*beta)  sbar  Coeffs1 * [alpha^2, alpha, 1] ]
    end
    Machine4Epsilon = 4*eps()
-     if (tsi  <  Smallt[1] + Machine4Epsilon )
-         return [Smallt[1] Coeffs2]
-     elseif (tsi + Machine4Epsilon > Smallt[2] )
-         return [Smallt[1]  Coeffs1]
+     if (tsi  <  x[1] + Machine4Epsilon )
+         return [x[1] Coeffs2]
+     elseif (tsi + Machine4Epsilon > x[2] )
+         return [x[1]  Coeffs1]
      else
-         return [Smallt[1] Coeffs1 ; tsi Coeffs2]
+         return [x[1] Coeffs1 ; tsi Coeffs2]
      end
  end
 
@@ -303,10 +305,10 @@ function schumakerIndInterval(s::Array{<:Real,1}, z::Array{<:Real,1}, Smallt::Ar
    n = length(x)
    fullMatrix = schumakerIndInterval([gradients[1], gradients[2]], [y[1], y[2]], [x[1], x[2]] )
     for intrval = 2:(n-1)
-      Smallt = [ x[intrval] , x[intrval + 1] ]
-      s = [ y[intrval], y[intrval + 1] ]
-      z = [ gradients[intrval], gradients[intrval + 1] ]
-      intMatrix = schumakerIndInterval(z,s,Smallt)
+      xs = [ x[intrval] , x[intrval + 1] ]
+      ys = [ y[intrval], y[intrval + 1] ]
+      grads = [ gradients[intrval], gradients[intrval + 1] ]
+      intMatrix = schumakerIndInterval(grads,ys,xs)
       fullMatrix = vcat(fullMatrix,intMatrix)
     end
     fullMatrix = extrapolate(fullMatrix, extrapolation, x[n], y)

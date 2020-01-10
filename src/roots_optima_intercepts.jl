@@ -37,9 +37,9 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         b1  = spline.coefficient_matrix_[i,2]
         c1  = constants_minus_root[i]
         c2 = constants_minus_root[i+1]
-        interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i] + 3*eps() # This 3 epsilon is here because of problems where one segment would predict it is an epsilon within
+        interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i] + 1000*eps() # This 1000 epsilon is here because of problems where one segment would predict it is an epsilon within
         # the next segment and the next segment (correctly) thinks it is in the previous. So neither pick up the root. So with this we potentially record twice and then we can later on remove
-        # nearby roots.
+        # nearby roots. Still gave dodgy results at 10 epsilons. So I boosted it.
         if test_if_intercept_in_interval(a1,b1,c1,c2,interval_width)
             if abs(a1) > eps() # Is it quadratic
                 det = sqrt(b1^2 - 4*a1*c1)
@@ -47,7 +47,7 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
                 left_root  = minimum(both_roots)
                 right_root = maximum(both_roots)
                 # This means that the endpoints are double counted. Thus we will have to remove them later.
-                if (left_root >= 0) && (left_root <= interval_width + 5*eps())
+                if (left_root >= 0) && (left_root <= interval_width)
                     append!(roots, spline.IntStarts_[i] + left_root)
                     append!(first_derivatives, 2 * a1 * left_root + b1)
                     append!(second_derivatives, 2 * a1)
@@ -102,7 +102,7 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         if length(roots) > 1
            gaps = roots[2:length(roots)] .- roots[1:(length(roots)-1)]
            for i in 1:length(gaps)
-               if abs(gaps[i]) < 100 * eps() roots_in_interval[i+1] = false end
+               if abs(gaps[i]) < 10000 * eps() roots_in_interval[i+1] = false end
            end
         end
         return (roots = roots[roots_in_interval], first_derivatives = first_derivatives[roots_in_interval], second_derivatives = second_derivatives[roots_in_interval])
