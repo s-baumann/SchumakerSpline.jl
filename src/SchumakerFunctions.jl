@@ -44,7 +44,7 @@ struct Schumaker{T<:AbstractFloat}
         elseif length(x) == 2
             IntStarts = Array{T,1}([x[1]])
             IntEnds   = Array{T,1}([x[2]])
-            linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
+            @fastmath linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
             SpCoefs = [0 linear_coefficient y[1]]
             # In this case it defaults to curve extrapolation (which is same as linear here)
             # So we just alter in case constant is specified.
@@ -130,14 +130,14 @@ function evaluate(spline::Schumaker, PointToExamine::T,  derivative::Integer = 0
     # Derivative of 1, 2 are first and second derivatives respectively.
     IntervalNum = searchsortedlast(spline.IntStarts_, PointToExamine)
     IntervalNum = max(IntervalNum, 1)
-    xmt = PointToExamine - spline.IntStarts_[IntervalNum]
-    Coefs = spline.coefficient_matrix_[IntervalNum,:]
+    @inbounds xmt = AbstractFloat(PointToExamine - spline.IntStarts_[IntervalNum])
+    Coefs = @inbounds spline.coefficient_matrix_[IntervalNum,:]
     if derivative == 0
-        return reshape(Coefs' * [xmt^2 xmt 1]', 1)[1]
+        return sum(@. Coefs .* [xmt^2, xmt, 1.0])
     elseif derivative == 1
-        return reshape(Coefs' * [2*xmt 1 0]', 1)[1]
+        return sum(@. Coefs .* [2*xmt, 1.0, 0.0])
     elseif derivative == 2
-        return reshape(Coefs' * [2 0 0]', 1)[1]
+        return sum(@. Coefs .* [2.0, 0.0, 0.0])
     elseif derivative < 0
         error("This function cannot do integrals. Use evaluate_integral instead")
     else
@@ -171,18 +171,17 @@ function evaluate_integral(spline::Schumaker, lhs::Real, rhs::Real)
     if number_of_intervals == 0
         return section_integral(spline , lhs, rhs)
     elseif number_of_intervals == 1
-        first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
-        last  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
-        return first + last
+        @inbounds first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
+        @inbounds lst  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
+        return first + lst
     else
         interior_areas = 0.0
-        first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
-        for i in 1:(number_of_intervals-1)
-            sec_int =  section_integral(spline ,  spline.IntStarts_[first_interval + i] , spline.IntStarts_[first_interval + i+1] )
-            if isnan(sec_int) error(string("Bug at ", i)) end
-            interior_areas = interior_areas + sec_int
+        @inbounds first = section_integral(spline , lhs , spline.IntStarts_[first_interval + 1])
+        @simd for i in 1:(number_of_intervals-1)
+            @inbounds sec_int =  section_integral(spline ,  spline.IntStarts_[first_interval + i] , spline.IntStarts_[first_interval + i+1] )
+            interior_areas += sec_int
         end
-        last  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
+        @inbounds last  = section_integral(spline , spline.IntStarts_[last_interval]  , rhs)
         return first + interior_areas + last
     end
 end
@@ -193,12 +192,14 @@ function section_integral(spline::Schumaker, lhs::Real,  rhs::Real)
     # Note that the lhs is used to infer the interval.
     IntervalNum = searchsortedlast(spline.IntStarts_, lhs)
     IntervalNum = max(IntervalNum, 1)
-    Coefs = spline.coefficient_matrix_[ IntervalNum , :]
-    r_xmt = rhs - spline.IntStarts_[IntervalNum]
-    l_xmt = lhs - spline.IntStarts_[IntervalNum]
-    return reshape(Coefs' * [(1/3)*r_xmt^3 0.5*r_xmt^2 r_xmt]', 1)[1] - reshape(Coefs' * [(1/3)*l_xmt^3 0.5*l_xmt^2 l_xmt]', 1)[1]
-end
+    @inbounds Coefs = spline.coefficient_matrix_[ IntervalNum , :]
+    @inbounds r_xmt = rhs - spline.IntStarts_[IntervalNum]
+    @inbounds l_xmt = lhs - spline.IntStarts_[IntervalNum]
 
+    @fastmath Lint_array =  [(1/3)*l_xmt^3, 0.5*l_xmt^2, l_xmt]
+    @fastmath Rint_array =  [(1/3)*r_xmt^3, 0.5*r_xmt^2, r_xmt]
+    return sum(@. Coefs .* Rint_array) - sum(@. Coefs .* Lint_array)
+end
 
 """
 find_derivative_spline(spline::Schumaker)
@@ -221,15 +222,15 @@ Imputes gradients based on a vector of x and y coordinates.
 function imputeGradients(x::Array{<:Real,1}, y::Array{<:Real,1})
      n = length(x)
      # Judd (1998), page 233, second last equation
-     L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
+     @fastmath @inbounds L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
      # Judd (1998), page 233, last equation
-     d = (y[2:n]-y[1:(n-1)])./(x[2:n]-x[1:(n-1)])
+     @fastmath @inbounds d = (y[2:n]-y[1:(n-1)])./(x[2:n]-x[1:(n-1)])
      # Judd (1998), page 234, Eqn 6.11.6
-     Conditionsi = d[1:(n-2)].*d[2:(n-1)] .> 0
-     MiddleSiwithoutApplyingCondition = (L[1:(n-2)].*d[1:(n-2)]+L[2:(n-1)].* d[2:(n-1)]) ./ (L[1:(n-2)]+L[2:(n-1)])
+     @fastmath @inbounds Conditionsi = d[1:(n-2)].*d[2:(n-1)] .> 0
+     @fastmath @inbounds MiddleSiwithoutApplyingCondition = (L[1:(n-2)].*d[1:(n-2)]+L[2:(n-1)].* d[2:(n-1)]) ./ (L[1:(n-2)]+L[2:(n-1)])
      sb = Conditionsi .* MiddleSiwithoutApplyingCondition
      # Judd (1998), page 234, Second Equation line plus 6.11.6 gives this array of slopes.
-     ff = [((-sb[1]+3*d[1])/2);  sb ;  ((3*d[n-1]-sb[n-2])/2)]
+     @fastmath @inbounds ff = [((-sb[1]+3*d[1])/2);  sb ;  ((3*d[n-1]-sb[n-2])/2)]
      return ff
  end
 
@@ -252,15 +253,15 @@ function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x:
      tsi = x[2]
    else
      # Judd (1998), page 233, Algorithm 6.3 along with equations 6.11.4 and 6.11.5 provide this whole section
-     delta = (y[2] -y[1])/(x[2]-x[1])
-     Condition = ((gradients[1]-delta)*(gradients[2]-delta) >= 0)
-     Condition2 = abs(gradients[2]-delta) < abs(gradients[1]-delta)
+     @fastmath @inbounds delta = (y[2] -y[1])/(x[2]-x[1])
+     @fastmath @inbounds Condition = ((gradients[1]-delta)*(gradients[2]-delta) >= 0)
+     @fastmath @inbounds Condition2 = abs(gradients[2]-delta) < abs(gradients[1]-delta)
      if (Condition)
        tsi = sum(x)/2
      elseif (Condition2)
-       tsi = (x[1] + (x[2]-x[1])*(gradients[2]-delta)/(gradients[2]-gradients[1]))
+       @fastmath @inbounds tsi = (x[1] + (x[2]-x[1])*(gradients[2]-delta)/(gradients[2]-gradients[1]))
      else
-       tsi = (x[2] + (x[2]-x[1])*(gradients[1]-delta)/(gradients[2]-gradients[1]))
+       @fastmath @inbounds  tsi = (x[2] + (x[2]-x[1])*(gradients[1]-delta)/(gradients[2]-gradients[1]))
      end
    end
 
@@ -268,16 +269,16 @@ function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x:
    alpha = tsi-x[1]
    beta = x[2]-tsi
    # Judd (1998), page 232, 4th last equation of page.
-   sbar = (2*(y[2]-y[1])-(alpha*gradients[1]+beta*gradients[2]))/(x[2]-x[1])
+   @fastmath @inbounds sbar = (2*(y[2]-y[1])-(alpha*gradients[1]+beta*gradients[2]))/(x[2]-x[1])
    # Judd (1998), page 232, 3rd equation of page. (C1, B1, A1)
-   Coeffs1 = [ (sbar-gradients[1])/(2*alpha)  gradients[1]  y[1] ]
+   @fastmath @inbounds Coeffs1 = [ (sbar-gradients[1])/(2*alpha)  gradients[1]  y[1] ]
    if (beta == 0)
      Coeffs2 = Coeffs1
    else
      # Judd (1998), page 232, 4th equation of page. (C2, B2, A2)
-     Coeffs2 = [ (gradients[2]-sbar)/(2*beta)  sbar  Coeffs1 * [alpha^2, alpha, 1] ]
+     @fastmath @inbounds Coeffs2 = [ (gradients[2]-sbar)/(2*beta)  sbar  Coeffs1 * [alpha^2, alpha, 1] ]
    end
-   Machine4Epsilon = 4*eps()
+   @fastmath Machine4Epsilon = 4*eps()
      if (tsi  <  x[1] + Machine4Epsilon )
          return [x[1] Coeffs2]
      elseif (tsi + Machine4Epsilon > x[2] )
@@ -357,7 +358,7 @@ function extrapolate(fullMatrix::Array{<:Real,2}, extrapolation::Tuple{Schumaker
                                 # coefficients by themselves give the gradients at the left
                                 # of the interval. Here we want the gradient at the right.
     last_interval_width = Topx - fullMatrix[dim , 1]
-    grad_at_right = 2 * fullMatrix[dim , 2] * last_interval_width + fullMatrix[dim , 3]
+    @fastmath @inbounds grad_at_right = 2 * fullMatrix[dim , 2] * last_interval_width + fullMatrix[dim , 3]
     TopB = grad_at_right
     TopC = Topy
   elseif extrapolation[2] == Constant
@@ -366,8 +367,8 @@ function extrapolate(fullMatrix::Array{<:Real,2}, extrapolation::Tuple{Schumaker
   elseif extrapolation[2] == Curve # We are just going to add this one on regardless as otherwise end of data interval information is lost.
     Gap  =  Topx - fullMatrix[dim ,1]
     TopA = fullMatrix[dim ,2]
-    TopB = fullMatrix[dim ,3] + 2 * TopA * Gap
-    TopC = fullMatrix[dim ,4] + TopB * Gap - TopA * Gap*Gap
+    @fastmath @inbounds TopB = fullMatrix[dim ,3] + 2 * TopA * Gap
+    @fastmath @inbounds TopC = fullMatrix[dim ,4] + TopB * Gap - TopA * Gap*Gap
   end
   TopRow = [ Topx, TopA ,TopB ,TopC]
   # Appending blocks and returning.
