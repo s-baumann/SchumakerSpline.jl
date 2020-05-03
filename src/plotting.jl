@@ -27,13 +27,6 @@ function plot(ss::AbstractArray{Schumaker,1}, interval::Tuple{R,R} = (ss[1].IntS
     return plot(ss, grid; derivs = derivs, plot_options = plot_options, deriv_plot_options = deriv_plot_options, deriv2_plot_options = deriv2_plot_options, plt = plt)
 end
 
-function plot(ss::AbstractArray{Schumaker,1}, interval::Tuple{R,R} = (ss[1].IntStarts_[1], ss[1].IntStarts_[length(ss[1].IntStarts_)]); derivs::Bool = false, grid_len::Integer = 200, plot_options::Union{AbstractArray{Tuple,1},Missing} = missing,
-              deriv_plot_options::Union{AbstractArray{Tuple,1},Missing} = missing, deriv2_plot_options::Union{AbstractArray{Tuple,1},Missing} = missing, plt = missing)  where R<:Real
-    grid = collect(range(interval[1], interval[2], length=grid_len))
-    return plot(ss, grid; derivs = derivs, plot_options = plot_options, deriv_plot_options = deriv_plot_options, deriv2_plot_options = deriv2_plot_options, plt = plt)
-end
-
-
 function plot(ss::AbstractArray{Schumaker,1}, grid::AbstractArray{R,1}; derivs::Bool = false, plot_options::Union{AbstractArray{Tuple,1},Missing} = missing, deriv_plot_options::Union{AbstractArray{Tuple,1},Missing} = missing,
     deriv2_plot_options::Union{AbstractArray{Tuple,1},Missing} = missing, plt = missing) where R<:Real
     plt = ismissing(plt) ? plot() : plt
