@@ -9,9 +9,9 @@ function test_if_intercept_in_interval(a1::Real,b1::Real,c1::Real,c2::Real,inter
     # Now we have the case where the gradient switches sign within an interval but the sign of the endpoints did not change.
     # The easiest way to test will be to find the vertex of the parabola. See if it is within the interval and of a different sign to the endpoints.
     # We don't actually have to test if the vertex is in the interval however - it has to be for the gradient sign to have flipped.
-    @fastmath vertex_x = -b1/(2*a1) # Note that this is relative to x1.
-    @fastmath vertex_y = a1 * (vertex_x)^2 + b1*(vertex_x) + c1
-    @fastmath is_vertex_of_opposite_sign_in_y = abs(sign(c1) - sign(vertex_y)) > 0.5
+    vertex_x = -b1/(2*a1) # Note that this is relative to x1.
+    vertex_y = a1 * (vertex_x)^2 + b1*(vertex_x) + c1
+    is_vertex_of_opposite_sign_in_y = abs(sign(c1) - sign(vertex_y)) > 0.5
     return is_vertex_of_opposite_sign_in_y
 end
 
@@ -37,32 +37,32 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         b1  = spline.coefficient_matrix_[i,2]
         c1  = constants_minus_root[i]
         c2 = constants_minus_root[i+1]
-        @fastmath interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i] + 1000*eps() # This 1000 epsilon is here because of problems where one segment would predict it is an epsilon within
+        interval_width = spline.IntStarts_[i+1] - spline.IntStarts_[i] + 1000*eps() # This 1000 epsilon is here because of problems where one segment would predict it is an epsilon within
         # the next segment and the next segment (correctly) thinks it is in the previous. So neither pick up the root. So with this we potentially record twice and then we can later on remove
         # nearby roots. Still gave dodgy results at 10 epsilons. So I boosted it.
         if test_if_intercept_in_interval(a1,b1,c1,c2,interval_width)
             if abs(a1) > eps() # Is it quadratic
-                @fastmath det = sqrt(b1^2 - 4*a1*c1)
-                @fastmath both_roots = [(-b1 + det) / (2*a1), (-b1 - det) / (2*a1)] # The x coordinates here are relative to spline.IntStarts_[i].
+                det = sqrt(b1^2 - 4*a1*c1)
+                both_roots = [(-b1 + det) / (2*a1), (-b1 - det) / (2*a1)] # The x coordinates here are relative to spline.IntStarts_[i].
                 left_root  = minimum(both_roots)
                 right_root = maximum(both_roots)
                 # This means that the endpoints are double counted. Thus we will have to remove them later.
                 if (left_root >= 0) && (left_root <= interval_width)
-                    @fastmath append!(roots, spline.IntStarts_[i] + left_root)
-                    @fastmath append!(first_derivatives, 2 * a1 * left_root + b1)
-                    @fastmath append!(second_derivatives, 2 * a1)
+                    append!(roots, spline.IntStarts_[i] + left_root)
+                    append!(first_derivatives, 2 * a1 * left_root + b1)
+                    append!(second_derivatives, 2 * a1)
                 end
                 if (right_root >= 0) && (right_root <= interval_width)
-                    @fastmath append!(roots, spline.IntStarts_[i] + right_root)
-                    @fastmath append!(first_derivatives, 2 * a1 * right_root + b1)
-                    @fastmath append!(second_derivatives, 2 * a1)
+                    append!(roots, spline.IntStarts_[i] + right_root)
+                    append!(first_derivatives, 2 * a1 * right_root + b1)
+                    append!(second_derivatives, 2 * a1)
                 end
             else # Is it linear? Note it cannot be constant or else it could not have jumped past zero in the interval.
                 new_root = spline.IntStarts_[i] - c1/b1
                 if !((length(roots) > 0) && (abs(new_root - last(roots)) < 1e-5))
-                    @fastmath append!(roots, spline.IntStarts_[i] - c1/b1)
-                    @fastmath append!(first_derivatives, b1)
-                    @fastmath append!(second_derivatives, 0.0)
+                    append!(roots, spline.IntStarts_[i] - c1/b1)
+                    append!(first_derivatives, b1)
+                    append!(second_derivatives, 0.0)
                 end
             end
         end
@@ -74,14 +74,14 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
         b = spline.coefficient_matrix_[len,2]
         c = constants_minus_root[len]
         if abs(a) > eps() # Is it quadratic
-            @fastmath root_determinant = sqrt(b^2 - 4*a*c)
-            @fastmath end_roots = end_of_last_interval .+ [(-b - root_determinant)/(2*a), (-b + root_determinant)/(2*a)]
+            root_determinant = sqrt(b^2 - 4*a*c)
+            end_roots = end_of_last_interval .+ [(-b - root_determinant)/(2*a), (-b + root_determinant)/(2*a)]
             end_roots2 = end_roots[(end_roots .>= end_of_last_interval) .& (end_roots .<= interval[2])]
             num_new_roots = length(end_roots2)
             if num_new_roots > 0
                 append!(roots, end_roots2)
-                @fastmath append!(first_derivatives, (2 * a) .* end_roots2 .+ b)
-                @fastmath append!(second_derivatives, repeat([2*a], num_new_roots))
+                append!(first_derivatives, (2 * a) .* end_roots2 .+ b)
+                append!(second_derivatives, repeat([2*a], num_new_roots))
             end
         elseif abs(b) > eps() # If it is linear.
             new_root = [-c/b + end_of_last_interval]
@@ -137,8 +137,8 @@ end
 A basic application of the textbook quadratic formula.
 """
 function quadratic_formula_roots(a,b,c)
-    @fastmath determin = sqrt(b^2 - 4*a*c)
-    @fastmath roots = [(-b + determin)/(2*a), (-b - determin)/(2*a)]
+    determin = sqrt(b^2 - 4*a*c)
+    roots = [(-b + determin)/(2*a), (-b - determin)/(2*a)]
     return(roots)
 end
 """
@@ -161,8 +161,8 @@ function get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval:
     # The final spline is in terms of (x-start1).
     G = start1 - start2
     A = a1 - a2
-    @fastmath B = b1 - b2 - 2*a2*G
-    @fastmath C = c1 - c2 - a2*(G^2) - b2*G
+    B = b1 - b2 - 2*a2*G
+    C = c1 - c2 - a2*(G^2) - b2*G
     # Now we need to use quadratic formula to get the roots and pick the root in the interval.
     roots = quadratic_formula_roots(A,B,C) .+ start1
     roots_in_interval = roots[(roots .>= interval[1]-10*eps()) .& (roots .<= interval[2]+10*eps())]

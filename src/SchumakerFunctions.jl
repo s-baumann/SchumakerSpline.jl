@@ -37,21 +37,21 @@ struct Schumaker{T<:AbstractFloat}
             error("Zero length x vector is insufficient to create Schumaker Spline.")
         elseif length(x) == 1
             IntStarts = Array{T,1}(x)
-            SpCoefs = [0 0 y[1]]
+            @inbounds SpCoefs = [0 0 y[1]]
             # Note that this hardcodes in constant extrapolation. This is only
             # feasible one as we do not have derivative or curve information.
             return new{T}(IntStarts, SpCoefs)
         elseif length(x) == 2
-            IntStarts = Array{T,1}([x[1]])
-            IntEnds   = Array{T,1}([x[2]])
-            @fastmath linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
-            SpCoefs = [0 linear_coefficient y[1]]
+            @inbounds IntStarts = Array{T,1}([x[1]])
+            @inbounds IntEnds   = Array{T,1}([x[2]])
+            @inbounds linear_coefficient = (y[2]- y[1]) / (x[2]-x[1])
+            @inbounds SpCoefs = [0 linear_coefficient y[1]]
             # In this case it defaults to curve extrapolation (which is same as linear here)
             # So we just alter in case constant is specified.
             if extrapolation[1] == Constant || extrapolation[2] == Constant
                 matrix_without_extrapolation = hcat(IntStarts , SpCoefs)
-                matrix_with_extrapolation    = extrapolate(matrix_without_extrapolation, extrapolation, x[2], y)
-                return new{T}(matrix_with_extrapolation[:,1], matrix_with_extrapolation[:,2:4])
+                @inbounds matrix_with_extrapolation    = extrapolate(matrix_without_extrapolation, extrapolation, x[2], y)
+                return @inbounds new{T}(matrix_with_extrapolation[:,1], matrix_with_extrapolation[:,2:4])
             else
                 return new{T}(IntStarts, SpCoefs)
             end
@@ -60,10 +60,10 @@ struct Schumaker{T<:AbstractFloat}
            gradients = imputeGradients(x,y)
         end
         if !ismissing(left_gradient)
-            gradients[1] = left_gradient
+            @inbounds gradients[1] = left_gradient
         end
         if !ismissing(right_gradient)
-            gradients[length(gradients)] = right_gradient
+            @inbounds gradients[length(gradients)] = right_gradient
         end
         IntStarts, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
         return new{T}(IntStarts, SpCoefs)
@@ -96,9 +96,9 @@ struct Schumaker{T<:AbstractFloat}
     function Schumaker{Q}(x::AbstractArray, y::AbstractArray ; gradients::Union{Missing,AbstractArray} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
                           extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where Q<:Real
         got_both = (!).(ismissing.(x) .| ismissing.(y))
-        new_x = convert.(Q, x[got_both])
-        new_y = convert.(Q, y[got_both])
-        new_gradients = ismissing(gradients)        ? missing : convert.(Q, gradients[got_both])
+        @inbounds new_x = convert.(Q, x[got_both])
+        @inbounds new_y = convert.(Q, y[got_both])
+        @inbounds new_gradients = ismissing(gradients)        ? missing : convert.(Q, gradients[got_both])
         converted_left  = ismissing(left_gradient)  ? missing : convert(Q, left_gradient)
         converted_right = ismissing(right_gradient) ? missing : convert(Q, right_gradient)
         new_left  = got_both[1]                     ? converted_left  : missing
@@ -196,8 +196,8 @@ function section_integral(spline::Schumaker, lhs::Real,  rhs::Real)
     @inbounds r_xmt = rhs - spline.IntStarts_[IntervalNum]
     @inbounds l_xmt = lhs - spline.IntStarts_[IntervalNum]
 
-    @fastmath Lint_array =  [(1/3)*l_xmt^3, 0.5*l_xmt^2, l_xmt]
-    @fastmath Rint_array =  [(1/3)*r_xmt^3, 0.5*r_xmt^2, r_xmt]
+    Lint_array =  [(1/3)*l_xmt^3, 0.5*l_xmt^2, l_xmt]
+    Rint_array =  [(1/3)*r_xmt^3, 0.5*r_xmt^2, r_xmt]
     return sum(@. Coefs .* Rint_array) - sum(@. Coefs .* Lint_array)
 end
 
@@ -222,15 +222,15 @@ Imputes gradients based on a vector of x and y coordinates.
 function imputeGradients(x::Array{<:Real,1}, y::Array{<:Real,1})
      n = length(x)
      # Judd (1998), page 233, second last equation
-     @fastmath @inbounds L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
+     @inbounds L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
      # Judd (1998), page 233, last equation
-     @fastmath @inbounds d = (y[2:n]-y[1:(n-1)])./(x[2:n]-x[1:(n-1)])
+     @inbounds d = (y[2:n]-y[1:(n-1)])./(x[2:n]-x[1:(n-1)])
      # Judd (1998), page 234, Eqn 6.11.6
-     @fastmath @inbounds Conditionsi = d[1:(n-2)].*d[2:(n-1)] .> 0
-     @fastmath @inbounds MiddleSiwithoutApplyingCondition = (L[1:(n-2)].*d[1:(n-2)]+L[2:(n-1)].* d[2:(n-1)]) ./ (L[1:(n-2)]+L[2:(n-1)])
+     @inbounds Conditionsi = d[1:(n-2)].*d[2:(n-1)] .> 0
+     @inbounds MiddleSiwithoutApplyingCondition = (L[1:(n-2)].*d[1:(n-2)]+L[2:(n-1)].* d[2:(n-1)]) ./ (L[1:(n-2)]+L[2:(n-1)])
      sb = Conditionsi .* MiddleSiwithoutApplyingCondition
      # Judd (1998), page 234, Second Equation line plus 6.11.6 gives this array of slopes.
-     @fastmath @inbounds ff = [((-sb[1]+3*d[1])/2);  sb ;  ((3*d[n-1]-sb[n-2])/2)]
+     @inbounds ff = [((-sb[1]+3*d[1])/2);  sb ;  ((3*d[n-1]-sb[n-2])/2)]
      return ff
  end
 
@@ -253,15 +253,15 @@ function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x:
      tsi = x[2]
    else
      # Judd (1998), page 233, Algorithm 6.3 along with equations 6.11.4 and 6.11.5 provide this whole section
-     @fastmath @inbounds delta = (y[2] -y[1])/(x[2]-x[1])
-     @fastmath @inbounds Condition = ((gradients[1]-delta)*(gradients[2]-delta) >= 0)
-     @fastmath @inbounds Condition2 = abs(gradients[2]-delta) < abs(gradients[1]-delta)
+     @inbounds delta = (y[2] -y[1])/(x[2]-x[1])
+     @inbounds Condition = ((gradients[1]-delta)*(gradients[2]-delta) >= 0)
+     @inbounds Condition2 = abs(gradients[2]-delta) < abs(gradients[1]-delta)
      if (Condition)
        tsi = sum(x)/2
      elseif (Condition2)
-       @fastmath @inbounds tsi = (x[1] + (x[2]-x[1])*(gradients[2]-delta)/(gradients[2]-gradients[1]))
+       @inbounds tsi = (x[1] + (x[2]-x[1])*(gradients[2]-delta)/(gradients[2]-gradients[1]))
      else
-       @fastmath @inbounds  tsi = (x[2] + (x[2]-x[1])*(gradients[1]-delta)/(gradients[2]-gradients[1]))
+       @inbounds  tsi = (x[2] + (x[2]-x[1])*(gradients[1]-delta)/(gradients[2]-gradients[1]))
      end
    end
 
@@ -269,16 +269,16 @@ function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x:
    alpha = tsi-x[1]
    beta = x[2]-tsi
    # Judd (1998), page 232, 4th last equation of page.
-   @fastmath @inbounds sbar = (2*(y[2]-y[1])-(alpha*gradients[1]+beta*gradients[2]))/(x[2]-x[1])
+    @inbounds sbar = (2*(y[2]-y[1])-(alpha*gradients[1]+beta*gradients[2]))/(x[2]-x[1])
    # Judd (1998), page 232, 3rd equation of page. (C1, B1, A1)
-   @fastmath @inbounds Coeffs1 = [ (sbar-gradients[1])/(2*alpha)  gradients[1]  y[1] ]
+    @inbounds Coeffs1 = [ (sbar-gradients[1])/(2*alpha)  gradients[1]  y[1] ]
    if (beta == 0)
      Coeffs2 = Coeffs1
    else
      # Judd (1998), page 232, 4th equation of page. (C2, B2, A2)
-     @fastmath @inbounds Coeffs2 = [ (gradients[2]-sbar)/(2*beta)  sbar  Coeffs1 * [alpha^2, alpha, 1] ]
+     @inbounds Coeffs2 = [ (gradients[2]-sbar)/(2*beta)  sbar  Coeffs1 * [alpha^2, alpha, 1] ]
    end
-   @fastmath Machine4Epsilon = 4*eps()
+   Machine4Epsilon = 4*eps()
      if (tsi  <  x[1] + Machine4Epsilon )
          return [x[1] Coeffs2]
      elseif (tsi + Machine4Epsilon > x[2] )
@@ -358,7 +358,7 @@ function extrapolate(fullMatrix::Array{<:Real,2}, extrapolation::Tuple{Schumaker
                                 # coefficients by themselves give the gradients at the left
                                 # of the interval. Here we want the gradient at the right.
     last_interval_width = Topx - fullMatrix[dim , 1]
-    @fastmath @inbounds grad_at_right = 2 * fullMatrix[dim , 2] * last_interval_width + fullMatrix[dim , 3]
+    @inbounds grad_at_right = 2 * fullMatrix[dim , 2] * last_interval_width + fullMatrix[dim , 3]
     TopB = grad_at_right
     TopC = Topy
   elseif extrapolation[2] == Constant
@@ -367,8 +367,8 @@ function extrapolate(fullMatrix::Array{<:Real,2}, extrapolation::Tuple{Schumaker
   elseif extrapolation[2] == Curve # We are just going to add this one on regardless as otherwise end of data interval information is lost.
     Gap  =  Topx - fullMatrix[dim ,1]
     TopA = fullMatrix[dim ,2]
-    @fastmath @inbounds TopB = fullMatrix[dim ,3] + 2 * TopA * Gap
-    @fastmath @inbounds TopC = fullMatrix[dim ,4] + TopB * Gap - TopA * Gap*Gap
+    @inbounds TopB = fullMatrix[dim ,3] + 2 * TopA * Gap
+    @inbounds TopC = fullMatrix[dim ,4] + TopB * Gap - TopA * Gap*Gap
   end
   TopRow = [ Topx, TopA ,TopB ,TopC]
   # Appending blocks and returning.
