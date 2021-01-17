@@ -1,6 +1,7 @@
 
+shape_map(x,upper,lower) = min(max(x,lower), upper)
 function reshape_values(xvals::Vector{<:Real}, yvals::Vector{<:Real}; increasing::Bool = true,
-                        concave::Bool = true, shape_map::Function = min(max(x,lower), upper))
+                        concave::Bool = true, shape_map::Function = shape_map)
     lenlen = length(yvals)
     new_shape_vec = Array{Float64,1}(undef, lenlen)
     if lenlen > 0 new_shape_vec[1] = yvals[1] end
