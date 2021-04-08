@@ -16,15 +16,23 @@ using SchumakerSpline
 using Plots
 ########################
 # Linear Extrapolation #
-spline = Schumaker(x,y; extrapolation = Linear)
+spline = Schumaker(x,y; extrapolation = (Linear, Linear))
 # Now plotting the spline
-xrange =  collect(range(-5, stop=10, length=100))
-values  = evaluate.(spline, xrange)
-derivative_values  = evaluate.(spline, xrange, 1 )
-second_derivative_values  = evaluate.(spline, xrange , 2 )
-plot(xrange , values; label = "Spline")
+xrange = collect(range(-5, stop=10, length=100))
+vals = evaluate.(spline, xrange)
+derivative_values = evaluate.(spline, xrange, 1 )
+second_derivative_values = evaluate.(spline, xrange , 2 )
+plot(xrange , vals; label = "Spline")
 plot!(xrange, derivative_values; label = "First Derivative")
 plot!(xrange, second_derivative_values; label = "Second Derivative")
+```
+
+As a convenience the evaluate function can also be called with the shorthand:
+
+```
+vals = spline.(xrange)
+derivative_values = spline.(xrange, 1)
+second_derivative_values = spline.(xrange , 2)
 ```
 
 We can now do the same with constant extrapolation.
@@ -32,14 +40,14 @@ We can now do the same with constant extrapolation.
 ```
 ##########################
 # Constant Extrapolation #
-extrapolation = Constant
-spline = Schumaker(x,y; extrapolation = Constant)
+extrapolation = (Constant, Constant)
+spline = Schumaker(x,y; extrapolation = extrapolation)
 # Now plotting the spline
 xrange =  collect(range(-5, stop=10, length=100))
-values  = evaluate.(spline, xrange)
+vals  = evaluate.(spline, xrange)
 derivative_values  = evaluate.(spline, xrange, 1 )
 second_derivative_values  = evaluate.(spline, xrange , 2 )
-plot(xrange , values; label = "Spline")
+plot(xrange , vals; label = "Spline")
 plot!(xrange, derivative_values; label = "First Derivative")
 plot!(xrange, second_derivative_values; label = "Second Derivative")
 ```
@@ -48,7 +56,7 @@ plot!(xrange, second_derivative_values; label = "Second Derivative")
 If we did have gradient information we could get a better approximation by using it. In this case our gradients are:
 ```
 analytical_first_derivative(e) = 1/e + 0.5 * e^(-0.5)
-first_derivs = analytical_first_derivative.(xrange)
+first_derivs = analytical_first_derivative.(x)
 ```
 and we can generate a spline using these gradients with:
 ```
