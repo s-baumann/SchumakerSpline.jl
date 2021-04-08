@@ -30,9 +30,8 @@ Creates a Schumaker spline.
 struct Schumaker{T<:AbstractFloat}
     IntStarts_::Array{T,1}
     coefficient_matrix_::Array{T,2}
-    function Schumaker(x::Array{<:Real,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing,
-                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve))
-        T = typeof(AbstractFloat(0.0)) # TODO This is pretty dodgy. Try to not have to do this.
+    function Schumaker(x::Array{T,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing,
+                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real
         if length(x) == 0
             error("Zero length x vector is insufficient to create Schumaker Spline.")
         elseif length(x) == 1

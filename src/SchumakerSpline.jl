@@ -17,4 +17,6 @@ include("algebra.jl")
 export +,-,*,/
 include("plotting.jl")
 export plot
+include("higher_dimensions.jl")
+export Schumaker2d
 end
