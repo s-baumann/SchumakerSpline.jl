@@ -112,7 +112,6 @@ end
 """
 find_optima(spline::Schumaker)
 Finds optima - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find optima.
-
 """
 function find_optima(spline::Schumaker; interval::Tuple{<:Real,<:Real} = (spline.IntStarts_[1], spline.IntStarts_[length(spline.IntStarts_)]))
     deriv_spline = find_derivative_spline(spline)

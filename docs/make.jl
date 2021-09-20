@@ -4,8 +4,11 @@ makedocs(
     format = Documenter.HTML(),
     sitename = "SchumakerSpline",
     modules = [SchumakerSpline],
-    pages = ["index.md",
-             "examples.md"]
+    pages = Any[
+        "Introduction" => "index.md",
+        "Examples" => "examples.md",
+        "API" => "api.md"]
+    ]
 )
 
 deploydocs(
