@@ -143,9 +143,7 @@ end
 """
     get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval::Tuple{U,U}) where T<:Real where R<:Real where U<:Real
 Finds the point at which two schumaker splines cross over each other within a single interval. This is not exported.
-
 """
-
 function get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval::Tuple{U,U}) where T<:Real where R<:Real where U<:Real
     # Getting the coefficients for the first spline.
     i = searchsortedlast(s1.IntStarts_, interval[1])

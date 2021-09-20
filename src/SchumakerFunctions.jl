@@ -65,7 +65,12 @@ struct Schumaker{T<:AbstractFloat}
             @inbounds gradients[length(gradients)] = right_gradient
         end
         IntStarts, SpCoefs = getCoefficientMatrix(x,y,gradients, extrapolation)
-        return new{T}(IntStarts, SpCoefs)
+        if T<:AbstractFloat
+            G = T
+        else
+            G = Float64
+        end
+        return new{G}(G.(IntStarts), G.(SpCoefs))
      end
     function Schumaker(IntStarts_::Array{T,1}, coefficient_matrix_::Array{T,2}) where {T<:Real}
         return new{T}(IntStarts_, coefficient_matrix_)
@@ -76,7 +81,13 @@ struct Schumaker{T<:AbstractFloat}
     function Schumaker(x::Array{Date,1},y::Array{<:Real,1} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,<:Real} = missing, right_gradient::Union{Missing,<:Real} = missing,
                        extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve))
         days_as_ints = Dates.days.(x)
-        return Schumaker(days_as_ints , y; gradients = gradients , extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
+        T = promote_type(eltype(y), eltype(days_as_ints))
+        if T<:AbstractFloat
+            G = T
+        else
+            G = Float64
+        end
+        return Schumaker{G}(days_as_ints , y; gradients = gradients , extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
     end
     function Schumaker(x::Union{Array{T,1},Array{Union{Missing,T},1}},y::Union{Array{R,1},Array{Union{Missing,R},1}} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
                        extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real where R<:Real
