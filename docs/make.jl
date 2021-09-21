@@ -8,7 +8,6 @@ makedocs(
         "Introduction" => "index.md",
         "Examples" => "examples.md",
         "API" => "api.md"]
-    ]
 )
 
 deploydocs(
