@@ -16,10 +16,16 @@ function test_if_intercept_in_interval(a1::Real,b1::Real,c1::Real,c2::Real,inter
 end
 
 """
-find_root(spline::Schumaker; root_value::T = 0.0)
-    Finds roots - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find roots.
-    Here root_value can be set to get all points at which the function is equal to the root value. For instance if you want to find all points at which
-    the spline has a value of 1.0.
+    find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tuple{<:Real,<:Real} = (spline.IntStarts_[1], spline.IntStarts_[length(spline.IntStarts_)])) where T<:Real
+Finds roots - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find roots.
+Here root_value can be set to get all points at which the function is equal to the root value. For instance if you want to find all points at which
+the spline has a value of 1.0.
+### Inputs
+* `spline` - The spline you want to find the roots for.
+* `root_value` - What level counts as a root.
+* `interval` - What interval to explore for roots.
+### Returns
+* A `NamedTuple` describing all roots found together with the derivatives and second derivatives at that point.
 """
 function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tuple{<:Real,<:Real} = (spline.IntStarts_[1], spline.IntStarts_[length(spline.IntStarts_)])) where T<:Real
     roots = Array{T,1}(undef,0)
@@ -110,8 +116,13 @@ function find_roots(spline::Schumaker{T}; root_value::Real = 0.0, interval::Tupl
 end
 
 """
-find_optima(spline::Schumaker)
+    find_optima(spline::Schumaker)
 Finds optima - This is handy because in many applications schumaker splines are monotonic and globally concave/convex and so it is easy to find optima.
+### Inputs
+* `spline` - The spline you want to find optima for.
+* `interval` - The interval over which you want to look for optima.
+### Returns
+* A NamedTuple containing the optima and the types of the optima (:Maximum or :Minimum)
 """
 function find_optima(spline::Schumaker; interval::Tuple{<:Real,<:Real} = (spline.IntStarts_[1], spline.IntStarts_[length(spline.IntStarts_)]))
     deriv_spline = find_derivative_spline(spline)
@@ -132,17 +143,29 @@ end
 
 ## Finding intercepts
 """
-    quadratic_formula_roots(a,b,c)
+    quadratic_formula_roots(a::Real,b::Real,c::Real)
 A basic application of the textbook quadratic formula.
+### Inputs
+* `a` - The quadratic term
+* `b` - The linear term
+* `c` - The constant
+### Returns
+* A vector with the roots.
 """
-function quadratic_formula_roots(a,b,c)
+function quadratic_formula_roots(a::Real,b::Real,c::Real)
     determin = sqrt(b^2 - 4*a*c)
     roots = [(-b + determin)/(2*a), (-b - determin)/(2*a)]
-    return(roots)
+    return roots
 end
 """
     get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval::Tuple{U,U}) where T<:Real where R<:Real where U<:Real
-Finds the point at which two schumaker splines cross over each other within a single interval. This is not exported.
+Finds the point at which two schumaker splines cross over each other within a single interval.
+### Inputs
+* `s1` - The first spline
+* `s2` - The second spline
+* `interval` - The interval you want to examine for crossovers.
+### Returns
+* A `Vector` describing crossover points.
 """
 function get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval::Tuple{U,U}) where T<:Real where R<:Real where U<:Real
     # Getting the coefficients for the first spline.
@@ -163,7 +186,7 @@ function get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval:
     # Now we need to use quadratic formula to get the roots and pick the root in the interval.
     roots = quadratic_formula_roots(A,B,C) .+ start1
     roots_in_interval = roots[(roots .>= interval[1]-10*eps()) .& (roots .<= interval[2]+10*eps())]
-    return(roots_in_interval)
+    return roots_in_interval
 end
 
 """

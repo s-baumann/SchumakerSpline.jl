@@ -2,9 +2,9 @@
 This creates an enum which details how extrapolation from the interpolation domain should be done.
 The possible enum values are:
 
-* Curve - Curve extrapolation extends out the quadratic form at the edges. This can lead to a nonmonotonic result (as the curve can eventually change direction)
-* Linear - Linear extrapolation extends out the gradient from at the edges. This will always lead to a monotonic result.
-* Constant - Linear extrapolation extends out the value from at the edges. This leads to flat values being extended out.
+* `Curve` - Curve extrapolation extends out the quadratic form at the edges. This can lead to a nonmonotonic result (as the curve can eventually change direction)
+* `Linear` - Linear extrapolation extends out the gradient from at the edges. This will always lead to a monotonic result.
+* `Constant` - Linear extrapolation extends out the value from at the edges. This leads to flat values being extended out.
 """
 @enum Schumaker_ExtrapolationSchemes begin
     Curve = 0
@@ -21,16 +21,16 @@ end
     Schumaker(x::Array{Date,1},y::Array{T,1} ; gradients::Union{Missing,Array{T,1}} = missing, extrapolation::Schumaker_ExtrapolationSchemes = Curve,
                   left_gradient::Union{Missing,T} = missing, right_gradient::Union{Missing,T} = missing)
 Creates a Schumaker spline.
-### Takes
-* x - A vector of x coordinates.
-* y - A vector of y coordinates.
-* extrapolation (optional) - This should be Curve, Linear or Constant specifying how to interpolate outside of the sample domain. By default it is Curve which extends out the first and last quadratic curves. The other options are Linear which extends the line (from first and last curve) out from the first and last point and Constant which extends out the y value at the first and last point.
-* gradients (optional)- A vector of gradients at each point. If not supplied these are imputed from x and y.
-* left_gradient - The gradient at the lowest value of x in the domain. This will override the gradient imputed or submitted in the gradients optional argument (if it is submitted there)
-* right_gradient - The gradient at the highest value of x in the domain. This will override the gradient imputed or submitted in the gradients optional argument (if it is submitted there)
+### Inputs
+* `x` - A vector of x coordinates.
+* `y` - A vector of y coordinates.
+* `extrapolation` - This should be `Curve`, `Linear` or `Constant` specifying how to interpolate outside of the sample domain.
+* `gradients` - A vector of gradients at each point. If not supplied these are imputed from x and y.
+* `left_gradient` - The gradient at the lowest value of x in the domain. This will override the gradient imputed or submitted in the gradients optional argument (if it is submitted there)
+* `right_gradient` - The gradient at the highest value of x in the domain. This will override the gradient imputed or submitted in the gradients optional argument (if it is submitted there)
 
 ### Returns
-* A Schumaker object which details the spline. This object can then be evaluated with evaluate or evaluate_integral.
+* A `Schumaker` object which contains the spline. This object can then be evaluated with evaluate or evaluate_integral.
  """
 struct Schumaker{T<:AbstractFloat}
     IntStarts_::Array{T,1}
@@ -132,10 +132,10 @@ Base.broadcastable(e::Schumaker) = Ref(e)
 """
 Evaluates the spline at a point. The point can be specified as a Real number (Int, Float, etc) or a Date.
 Derivatives can also be taken.
-### Takes
- * spline - A Schumaker type spline
- * PointToExamine - The point at which to evaluate the integral
- * derivative - The derivative being sought. This should be 0 to just evaluate the spline, 1 for the first derivative or 2 for a second derivative.
+### Inputs
+ * `spline` - A `Schumaker` type spline
+ * `PointToExamine` - The point at which to evaluate the integral
+ * `derivative` - The derivative being sought. This should be 0 to just evaluate the spline, 1 for the first derivative or 2 for a second derivative.
  Higher derivatives are all zero (because it is a quadratic spline). Negative values do not give integrals. Use evaluate_integral instead.
 ### Returns
  * A value of the spline or appropriate derivative in the same format as specified in the spline.
@@ -171,13 +171,12 @@ end
 """
 Estimates the integral of the spline between lhs and rhs. These end points can be input
 as Reals or Dates.
-### Takes
- * spline - A Schumaker type spline
- * lhs - The left hand limit of the integral
- * rhs - The right hand limit of the integral
-
+### Inputs
+ * `spline` - A Schumaker type spline
+ * `lhs` - The left hand limit of the integral
+ * `rhs` - The right hand limit of the integral
 ### Returns
- * A Float64 value of the integral.
+ * A `Float64` value of the integral.
 """
 function evaluate_integral(spline::Schumaker, lhs::Real, rhs::Real)
     first_interval = searchsortedlast(spline.IntStarts_, lhs)
@@ -231,10 +230,10 @@ end
 
 
 """
-    imputeGradients(x::Array{T,1}, y::Array{T,1})
+    imputeGradients(x::Vector{T}, y::Vector{T})
 Imputes gradients based on a vector of x and y coordinates.
 """
-function imputeGradients(x::Array{<:Real,1}, y::Array{<:Real,1})
+function imputeGradients(x::Vector{<:Real}, y::Vector{<:Real})
      n = length(x)
      # Judd (1998), page 233, second last equation
      @inbounds L = sqrt.( (x[2:n]-x[1:(n-1)]).^2 + (y[2:n]-y[1:(n-1)]).^2)
@@ -251,15 +250,14 @@ function imputeGradients(x::Array{<:Real,1}, y::Array{<:Real,1})
 
 """
 Splits an interval into 2 subintervals and creates the quadratic coefficients
-### Takes
- * gradients - A 2 entry vector with gradients at either end of the interval
- * y - A 2 entry vector with y values at either end of the interval
- * x - A 2 entry vector with x values at either end of the interval
-
+### Inputs
+ * `gradients` - A 2 entry vector with gradients at either end of the interval
+ * `y` - A 2 entry vector with y values at either end of the interval
+ * `x` - A 2 entry vector with x values at either end of the interval
 ### Returns
  * A 2 x 4 matrix. The first column is the x values of start of the two subintervals. The last 3 columns are quadratic coefficients in two subintervals.
 """
-function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x::Array{<:Real,1}) where T<:Real
+function schumakerIndInterval(gradients::Vector{<:Real}, y::Vector{<:Real}, x::Vector{<:Real}) where T<:Real
    # The SchumakerIndInterval function takes in each interval individually
    # and returns the location of the knot as well as the quadratic coefficients in each subinterval.
 
@@ -304,13 +302,12 @@ function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x:
  end
 
  """
- Calls SchumakerIndInterval many times to get full set of spline intervals and coefficients. Then calls extrapolation for out of sample behaviour
-### Takes
- * gradients - A vector of gradients at each point
- * x - A vector of x coordinates
- * y - A vector of y coordinates
- * extrapolation - A string in ("Curve", "Linear", "Constant") that gives behaviour outside of interpolation range.
-
+ Calls `SchumakerIndInterval` many times to get full set of spline intervals and coefficients. Then calls extrapolation for out of sample behaviour
+### Inputs
+ * `gradients` - A vector of gradients at each point
+ * `x` - A vector of `x` coordinates
+ * `y` - A vector of `y` coordinates
+ * `extrapolation` - A string in (Curve, Linear or Constant) that gives behaviour outside of interpolation range.
 ### Returns
  * A vector of interval starts
  * A vector of interval ends
@@ -333,12 +330,11 @@ function schumakerIndInterval(gradients::Array{<:Real,1}, y::Array{<:Real,1}, x:
 
 """
  Adds a row on top and bottom of coefficient matrix to give out of sample prediction.
-### Takes
- * fullMatrix - output from GetCoefficientMatrix first few lines
- * extrapolation - A tuple with two enums in (Curve, Linear, Constant) that gives behaviour outside of interpolation range.
- * x - A vector of x coordinates
- * y - A vector of y coordinates
-
+### Inputs
+ * `fullMatrix` - output from `GetCoefficientMatrix` first few lines
+ * `extrapolation` - A tuple with two enums in (Curve, Linear, Constant) that gives behaviour outside of interpolation range.
+ * `x` - A vector of x coordinates
+ * `y` - A vector of y coordinates
 ### Returns
   * A new version of fullMatrix with out of sample prediction built into it.
 """
