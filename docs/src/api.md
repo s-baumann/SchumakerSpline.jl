@@ -20,9 +20,6 @@ Pages = ["api.md"]
 
 ```@docs
     Schumaker_ExtrapolationSchemes
-    Curve
-    Linear
-    Constant
 ```
 
 ### Working with Splines
