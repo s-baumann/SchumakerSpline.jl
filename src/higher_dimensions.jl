@@ -34,7 +34,6 @@ end
 ### Returns
 * A scalar
 """
-
 function evaluate(spline::Schumaker2d, p1::Real, p2::Real)
     distances   = abs.(spline.IntStarts_ .- p1)
     # Direct hits

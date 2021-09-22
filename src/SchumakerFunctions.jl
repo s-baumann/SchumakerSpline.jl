@@ -1,18 +1,14 @@
 """
 This creates an enum which details how extrapolation from the interpolation domain should be done.
+The possible enum values are:
+
+* Curve - Curve extrapolation extends out the quadratic form at the edges. This can lead to a nonmonotonic result (as the curve can eventually change direction)
+* Linear - Linear extrapolation extends out the gradient from at the edges. This will always lead to a monotonic result.
+* Constant - Linear extrapolation extends out the value from at the edges. This leads to flat values being extended out.
 """
 @enum Schumaker_ExtrapolationSchemes begin
-    """
-    Curve extrapolation extends out the quadratic form at the edges. This can lead to a nonmonotonic result (as the curve can eventually change direction)
-    """
     Curve = 0
-    """
-    Linear extrapolation extends out the gradient from at the edges. This will always lead to a monotonic result.
-    """
     Linear = 1
-    """
-    Linear extrapolation extends out the value from at the edges. This leads to flat values being extended out.
-    """
     Constant = 2
 end
 
