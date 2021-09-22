@@ -166,7 +166,15 @@ function get_crossover_in_interval(s1::Schumaker{T}, s2::Schumaker{R}, interval:
     return(roots_in_interval)
 end
 
-
+"""
+    get_intersection_points(s1::Schumaker{T}, s2::Schumaker{R}) where T<:Real where R<:Real
+This funds the coordinates of the point at which spline s1 intercepts spline s2.
+### Inputs
+* `s1` - The first spline
+* `s2` - The second spline
+### Returns
+* Locations of any crossover points.
+"""
 function get_intersection_points(s1::Schumaker{T}, s2::Schumaker{R}) where T<:Real where R<:Real
     # What x locations to loop over
     all_starts = sort(unique(vcat(s1.IntStarts_, s2.IntStarts_)))

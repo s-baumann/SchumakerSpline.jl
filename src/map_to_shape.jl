@@ -1,5 +1,23 @@
 
 shape_map(x,upper,lower) = min(max(x,lower), upper)
+
+
+"""
+    reshape_values(xvals::Vector{<:Real}, yvals::Vector{<:Real}; increasing::Bool = true,
+                       concave::Bool = true, shape_map::Function = shape_map)
+This reshapes a vector of yvalues. For instance if we are doing fixed point acceleration that
+should result in a monotonic concave function (ie the consumption smoothing problem from the documentation examples)
+then we may end up with occasional non monotonic/concave values due to a dodgy optimiser or some other numerical issue.
+So we can use reshape_values to adjust the values that cannot be true.
+### Inputs
+* `xvals` - A vector of x coordinates.
+* `yvals` - A vector of y coordinates
+* `increasing` - Should the y values be increasing. If false then they must be decreasing
+* `concave` - Should the y values be concave. If false then they must be convex
+* `shape_map` - A function used to adjust values to be increasing-concave (or whatever settings)
+### Returns
+* An updated vector of y values.
+"""
 function reshape_values(xvals::Vector{<:Real}, yvals::Vector{<:Real}; increasing::Bool = true,
                         concave::Bool = true, shape_map::Function = shape_map)
     lenlen = length(yvals)

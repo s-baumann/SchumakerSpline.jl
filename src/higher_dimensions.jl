@@ -1,3 +1,12 @@
+
+"""
+Experimental: This uses a combination of Schumaker Splines to cover a 2 dimensional space.
+We have a grid of splines. We first evaluate in one dimension (which leads us to a point between two adjacent splines).
+Then we evaluate each of the two splines and interpolate.
+### Members
+* `IntStarts_` - A vector with the coordinates of each schumaker spline.
+* `schumakers` - A vector of schumaker splines.
+"""
 struct Schumaker2d{T<:AbstractFloat}
     IntStarts_::Array{T,1}
     schumakers::Array{Schumaker{T},1}
@@ -15,6 +24,16 @@ struct Schumaker2d{T<:AbstractFloat}
         return new{pro}(bycol ? x_col : x_row,schums)
     end
 end
+
+"""
+    evaluate(spline::Schumaker2d, p1::Real, p2::Real)
+### Inputs
+* `spline` - A Schumaker2d
+* `p1` - The coordinate in the first dimension.
+* `p2` - The coordinate in the second dimension.
+### Returns
+* A scalar
+"""
 
 function evaluate(spline::Schumaker2d, p1::Real, p2::Real)
     distances   = abs.(spline.IntStarts_ .- p1)

@@ -1,3 +1,15 @@
+
+"""
+    splice_splines(left_spline::Schumaker, right_spline::Schumaker, splice_point::Real)
+This puts two splines together. Making a new spline.
+Note that the stitched together spline is not guaranteed to be continuous or shape preserving anymore.
+### Inputs
+* `left_spline` - The spline to use on the left.
+* `right_spline` - The spline to use on the right.
+* `splice_point` - The x coordinate to stitch at.
+### Returns
+* A Schumaker struct
+"""
 function splice_splines(left_spline::Schumaker, right_spline::Schumaker, splice_point::Real)
     end_in_left_spline = searchsortedlast(left_spline.IntStarts_, splice_point)
     left_starts        = left_spline.IntStarts_[1:end_in_left_spline]
