@@ -94,20 +94,6 @@ struct Schumaker{T<:AbstractFloat}
         end
         return Schumaker{G}(days_as_ints , y; gradients = gradients , extrapolation = extrapolation, left_gradient = left_gradient, right_gradient = right_gradient)
     end
-    function Schumaker(x::Union{Array{T,1},Array{Union{Missing,T},1}},y::Union{Array{R,1},Array{Union{Missing,R},1}} ; gradients::Union{Missing,Array{<:Real,1}} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
-                       extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Real where R<:Real
-        got_both = (!).(ismissing.(x) .| ismissing.(y))
-        promo_type = promote_type(R,T)
-        new_x = convert.(promo_type, x[got_both])
-        new_y = convert.(promo_type, y[got_both])
-        new_gradients = ismissing(gradients)        ? missing : convert.(promo_type, gradients[got_both])
-        converted_left  = ismissing(left_gradient)  ? missing : convert(promo_type, left_gradient)
-        converted_right = ismissing(right_gradient) ? missing : convert(promo_type, right_gradient)
-        new_left  = got_both[1]                     ? converted_left  : missing
-        new_right = got_both[length(got_both)]      ? converted_right : missing
-        if length(new_x) == 0 error("After removing missing elements there are no points left to estimate schumaker spline") end
-        return Schumaker(new_x , new_y; gradients = new_gradients , extrapolation = extrapolation, left_gradient = new_left, right_gradient = new_right)
-    end
     function Schumaker{Q}(x::AbstractArray, y::AbstractArray ; gradients::Union{Missing,AbstractArray} = missing, left_gradient::Union{Missing,Real} = missing, right_gradient::Union{Missing,Real} = missing,
                           extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where Q<:Real
         got_both = (!).(ismissing.(x) .| ismissing.(y))
