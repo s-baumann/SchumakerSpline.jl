@@ -6,7 +6,7 @@ A Julia package to create a shape preserving spline. This is a shape preserving 
 
 This package has the same basic functionality as the R package called [schumaker](https://cran.r-project.org/web/packages/schumaker/index.html).
 
-If you want to do algebraic operations on splines you can also use a schumaker spline through the [UnivariateFunctions](https://github.com/s-baumann/UnivariateFunctions.jl) package.
+While this package does include basic operators (+,-,*,/) for combining a spline with a real number, for more advanced algebraic operations on splines (and between splines) you can also use a Schumaker spline through the [UnivariateFunctions](https://github.com/s-baumann/UnivariateFunctions.jl) package.
 
 ## Optional parameters
 

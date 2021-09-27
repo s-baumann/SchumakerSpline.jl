@@ -1,6 +1,6 @@
 
 """
-Experimental: This uses a combination of Schumaker Splines to cover a 2 dimensional space.
+This uses a combination of Schumaker Splines to cover a 2 dimensional space.
 We have a grid of splines. We first evaluate in one dimension (which leads us to a point between two adjacent splines).
 Then we evaluate each of the two splines and interpolate.
 ### Members
