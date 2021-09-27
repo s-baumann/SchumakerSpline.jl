@@ -46,13 +46,6 @@ function evaluate(spline::Schumaker2d, p1::Real, p2::Real)
     if length(direct_hits) > 0
         return spline.schumakers[direct_hits[1]](p2)
     end
-    # linear interpolation between two.
-    nearest_two = findall(distances .< sort(distances)[2] + 100*eps())
-    if length(nearest_two) < 2
-        println("p1 = ", p1)
-        println("p2 = ", p2)
-        println("spline = ", repr(spline))
-    end
     closest = findall(distances .< sort(distances)[2] + 100*eps())[[1,2]]
     dists = distances[closest]
     ys = map(s -> s(p2), spline.schumakers[closest])
