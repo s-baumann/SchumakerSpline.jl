@@ -25,6 +25,3 @@ end
 function *(num::Real, spl::Schumaker)
     return *(spl,num)
 end
-function /(num::Real, spl::Schumaker)
-    error("Dividing a real number by a schumaker spline is not supported in this package.")
-end

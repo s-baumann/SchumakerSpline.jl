@@ -23,6 +23,11 @@ struct Schumaker2d{T<:AbstractFloat}
         end
         return new{pro}(bycol ? x_col : x_row,schums)
     end
+    function Schumaker2d(x_row::Vector{R}, x_col::Vector{Y}, ygrid::Array{T,2}; bycol=true,
+             extrapolation::Tuple{Schumaker_ExtrapolationSchemes,Schumaker_ExtrapolationSchemes} = (Curve,Curve)) where T<:Integer where R<:Integer where Y<:Integer
+        fl = typeof(AbstractFloat(1.0))
+        return Schumaker2d( fl.(x_row), fl.(x_col), fl.(ygrid); bycol = bycol, extrapolation = extrapolation  )
+    end
 end
 
 """
