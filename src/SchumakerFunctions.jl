@@ -243,7 +243,7 @@ Splits an interval into 2 subintervals and creates the quadratic coefficients
 ### Returns
  * A 2 x 4 matrix. The first column is the x values of start of the two subintervals. The last 3 columns are quadratic coefficients in two subintervals.
 """
-function schumakerIndInterval(gradients::Vector{<:Real}, y::Vector{<:Real}, x::Vector{<:Real}) where T<:Real
+function schumakerIndInterval(gradients::Vector{<:Real}, y::Vector{<:Real}, x::Vector{<:Real})
    # The SchumakerIndInterval function takes in each interval individually
    # and returns the location of the knot as well as the quadratic coefficients in each subinterval.
 
