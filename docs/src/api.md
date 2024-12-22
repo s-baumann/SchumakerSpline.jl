@@ -47,3 +47,15 @@ Schumaker2d
 ```@docs
 plot
 ```
+
+### Internal Functions
+
+```@docs
+schumakerIndInterval
+imputeGradients
+quadratic_formula_roots
+test_if_intercept_in_interval
+getCoefficientMatrix
+extrapolate
+```
+
