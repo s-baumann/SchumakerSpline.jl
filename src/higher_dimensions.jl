@@ -46,7 +46,8 @@ function evaluate(spline::Schumaker2d, p1::Real, p2::Real)
     if length(direct_hits) > 0
         return spline.schumakers[direct_hits[1]](p2)
     end
-    closest = findall(distances .< sort(distances)[2] + 100*eps())[[1,2]]
+    second_largest_distance = sort(distances)[2]
+    closest = findall(distances .<= second_largest_distance + 100*eps())[[1,2]]
     dists = distances[closest]
     ys = map(s -> s(p2), spline.schumakers[closest])
     y = sum(ys .* ( reverse(dists)  ) ./ sum(dists))
