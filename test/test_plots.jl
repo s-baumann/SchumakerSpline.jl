@@ -1,6 +1,6 @@
 using Test
 @testset "Test Plotting" begin
-    using SchumakerSpline
+    using SchumakerSpline, Plots
     x = Array{Union{Missing,Float64}}(collect(0.0:0.01:2.0))
     y = Array{Union{Missing,Float64}}(sqrt.(x))
     y[5] = missing

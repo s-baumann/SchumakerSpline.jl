@@ -27,12 +27,12 @@ end
 function plot(s1::Schumaker, grid::AbstractArray{R,1}; derivs::Bool = false, plot_options::NamedTuple = (label = "Spline",), deriv_plot_options::NamedTuple = (label = "Spline - 1st deriv",),
               deriv2_plot_options::NamedTuple = (label = "Spline - 2nd deriv",), plt = missing) where R<:Real
     evals = s1.(grid)
-    plt = ismissing(plt) ? plot(grid, evals; plot_options...) : plot!(plt, grid, evals; plot_options...)
+    plt = ismissing(plt) ? plot(grid, evals; plot_options...) : plot(plt, grid, evals; plot_options...)
     if derivs
         evals_1 = evaluate.(s1,grid, 1)
-        plt = plot!(plt, grid, evals_1; deriv_plot_options...)
+        plt = plot(plt, grid, evals_1; deriv_plot_options...)
         evals_2 = evaluate.(s1,grid, 2)
-        plt = plot!(plt, grid, evals_2; deriv2_plot_options...)
+        plt = plot(plt, grid, evals_2; deriv2_plot_options...)
         return plt
     else
         return plt
