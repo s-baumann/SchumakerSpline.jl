@@ -51,7 +51,7 @@ plot
 ### Internal Functions
 
 ```@docs
-schumakerIndInterval
+schumakerIndInterval!
 imputeGradients
 quadratic_formula_roots
 test_if_intercept_in_interval
