@@ -1,7 +1,6 @@
 module SchumakerSpline
 
-    #using Plots
-    using Dates
+    using Dates, VegaLite
 
     include("SchumakerFunctions.jl")
 

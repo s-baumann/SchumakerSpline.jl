@@ -40,18 +40,25 @@ end
 * A scalar
 """
 function evaluate(spline::Schumaker2d, p1::Real, p2::Real)
-    distances   = abs.(spline.IntStarts_ .- p1)
-    # Direct hits
-    direct_hits = findall(distances .< 100*eps())
-    if length(direct_hits) > 0
-        return spline.schumakers[direct_hits[1]](p2)
+    starts = spline.IntStarts_
+    idx = searchsortedlast(starts, p1)
+    n = length(starts)
+    idx = clamp(idx, 1, n)
+    # Direct hit
+    @inbounds if abs(starts[idx] - p1) < 100 * eps()
+        return spline.schumakers[idx](p2)
     end
-    second_largest_distance = sort(distances)[2]
-    closest = findall(distances .<= second_largest_distance + 100*eps())[[1,2]]
-    dists = distances[closest]
-    ys = map(s -> s(p2), spline.schumakers[closest])
-    y = sum(ys .* ( reverse(dists)  ) ./ sum(dists))
-    return y
+    # Bracket: idx is to the left, idx+1 is to the right
+    if idx >= n
+        idx = n - 1
+    end
+    @inbounds d_left = p1 - starts[idx]
+    @inbounds d_right = starts[idx + 1] - p1
+    total = d_left + d_right
+    # Linear interpolation: weight by opposite distance
+    @inbounds y_left = spline.schumakers[idx](p2)
+    @inbounds y_right = spline.schumakers[idx + 1](p2)
+    return (y_left * d_right + y_right * d_left) / total
 end
 function (s::Schumaker2d)(p1::Real, p2::Real)
     return evaluate(s, p1, p2)

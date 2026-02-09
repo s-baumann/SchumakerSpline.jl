@@ -1,6 +1,6 @@
 using Test
 @testset "Test Plotting" begin
-    using SchumakerSpline, Plots
+    using SchumakerSpline
     x = Array{Union{Missing,Float64}}(collect(0.0:0.01:2.0))
     y = Array{Union{Missing,Float64}}(sqrt.(x))
     y[5] = missing
@@ -15,15 +15,14 @@ using Test
     plt = plot(s1, (0.0,1.0))
     # And we can plot the derivatives too
     plt = plot(s1, (0.0,1.0); derivs = true)
-    # This should add a second spline just below with same derivaitves
-    glt = plot(s1 -10.0, [0.5,1.0]; plot_options = (label = "shifted",), deriv_plot_options = (label = "shifted deriv1",), deriv2_plot_options = (label = "shifted deriv2",), plt = plt)
-    # This should only plot the first spline.
-    qlt = plot(s1 + 0.2, (0.0,1.0); plot_options = (label = "shifted",))
-
+    # Plot with custom labels
+    plt = plot(s1 - 10.0, [0.5,1.0]; label = "shifted", deriv_label = "shifted deriv1", deriv2_label = "shifted deriv2")
+    plt = plot(s1 + 0.2, (0.0,1.0); label = "shifted")
 
     ss = Array{Schumaker,1}([s1, s1+0.2, s1*0.8+0.2])
-    plt  = plot(ss, [0.0,1.0])
-
+    plt = plot(ss, [0.0,1.0])
     plt = plot(ss)
-    plt2 = plot(0-2.0*s1 + 0.1, [0.0,1.0]; derivs = false, plot_options = (label = "new one",), plt = plt)
+    plt = plot(ss; labels = ["First", "Second", "Third"])
+
+    plt = plot(0-2.0*s1 + 0.1, [0.0,1.0]; derivs = false, label = "new one")
 end

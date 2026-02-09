@@ -13,18 +13,11 @@ We can create a spline and plot it with linear extrapolation.
 
 ```
 using SchumakerSpline
-using Plots
 ########################
 # Linear Extrapolation #
 spline = Schumaker(x,y; extrapolation = (Linear, Linear))
-# Now plotting the spline
-xrange = collect(range(-5, stop=10, length=100))
-vals = evaluate.(spline, xrange)
-derivative_values = evaluate.(spline, xrange, 1 )
-second_derivative_values = evaluate.(spline, xrange , 2 )
-plot(xrange , vals; label = "Spline")
-plot!(xrange, derivative_values; label = "First Derivative")
-plot!(xrange, second_derivative_values; label = "Second Derivative")
+# Now plotting the spline with derivatives
+plot(spline, (-5.0, 10.0); derivs = true)
 ```
 
 As a convenience the evaluate function can also be called with the shorthand:
@@ -40,16 +33,9 @@ We can now do the same with constant extrapolation.
 ```
 ##########################
 # Constant Extrapolation #
-extrapolation = (Constant, Constant)
-spline = Schumaker(x,y; extrapolation = extrapolation)
-# Now plotting the spline
-xrange =  collect(range(-5, stop=10, length=100))
-vals  = evaluate.(spline, xrange)
-derivative_values  = evaluate.(spline, xrange, 1 )
-second_derivative_values  = evaluate.(spline, xrange , 2 )
-plot(xrange , vals; label = "Spline")
-plot!(xrange, derivative_values; label = "First Derivative")
-plot!(xrange, second_derivative_values; label = "Second Derivative")
+spline = Schumaker(x,y; extrapolation = (Constant, Constant))
+# Now plotting the spline with derivatives
+plot(spline, (-5.0, 10.0); derivs = true)
 ```
 
 
